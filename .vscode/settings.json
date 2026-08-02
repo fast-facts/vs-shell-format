@@ -11,9 +11,25 @@
   },
   "typescript.tsdk": "./node_modules/typescript/lib", // we want to use the TS server from our node_modules folder to control its version
 
+  "shellformat.effectLanguages": [
+    "shellscript",
+    "dotenv",
+    "hosts",
+    "jvmoptions",
+    "ignore",
+    "gitignore",
+    "properties",
+    "spring-boot-properties",
+    "azcli",
+    "bats",
+    "zsh",
+    "dockerfile"
+  ],
+
   "[shellscript]": { "editor.defaultFormatter": "lumirelle.shell-format-rev" },
   "[properties]": { "editor.defaultFormatter": "lumirelle.shell-format-rev" },
   "[dotenv]": { "editor.defaultFormatter": "lumirelle.shell-format-rev" },
   "[ignore]": { "editor.defaultFormatter": "lumirelle.shell-format-rev" },
+  "[dockerfile]": { "editor.defaultFormatter": "lumirelle.shell-format-rev" },
   "[zsh]": { "editor.defaultFormatter": "lumirelle.shell-format-rev" }
 }
