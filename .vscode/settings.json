@@ -15,5 +15,6 @@
   "[properties]": { "editor.defaultFormatter": "lumirelle.shell-format-rev" },
   "[dotenv]": { "editor.defaultFormatter": "lumirelle.shell-format-rev" },
   "[ignore]": { "editor.defaultFormatter": "lumirelle.shell-format-rev" },
+  "[dockerfile]": { "editor.defaultFormatter": "lumirelle.shell-format-rev" },
   "[zsh]": { "editor.defaultFormatter": "lumirelle.shell-format-rev" }
 }

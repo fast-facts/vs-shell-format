@@ -23,15 +23,27 @@
 
 ## Supported file types or languages
 
-> [!Caution]
+> [!Note]
 >
-> Since v1.0, this extension drops the support for Dockerfile due to the limitation of upstream tool [shfmt](https://github.com/mvdan/sh), see related [PR](https://github.com/lumirelle/vs-shell-format/pull/9) for more details.
+> Dockerfile support is **opt-in**. It is registered as a language but excluded from the default `shellformat.effectLanguages`, so it won't format on save unless you enable it.
 >
-> It's recommended to use another extension – [Container Tools](https://github.com/microsoft/vscode-containers) instead!
+> The upstream tool [shfmt](https://github.com/mvdan/sh) does not officially support Dockerfile. However, since common Dockerfile syntax (e.g. `RUN` with shell commands) falls within the shell grammar, shfmt can format it via the `--ln=dockerfile` language variant. Because this is not an officially supported path and may mangle complex multiline constructs, it is disabled by default — enable it only if it works for your use case.
+>
+> To enable, add `dockerfile` to `shellformat.effectLanguages`, or enable `shellformat.useEditorConfig` and add the following to your `.editorconfig`:
+>
+> ```ini
+> [Dockerfile]
+> indent_size = 4
+> indent_style = space
+> binary_next_line = true
+> ```
+>
+> See [#14](https://github.com/lumirelle/vs-shell-format/issues/14) for background.
 
 | language    | extension                | describe              |
 | ----------- | ------------------------ | --------------------- |
 | shellscript | .sh .bash                | shell script files    |
+| dockerfile  | Dockerfile \*.dockerfile | dockerfile (opt-in)   |
 | ignore      | .gitignore .dockerignore | ignore files          |
 | properties  | .properties              | java properties files |
 | jvmoptions  | .vmoptions , jvm.options | jvm options file      |
