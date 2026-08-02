@@ -25,9 +25,9 @@
 
 > [!Note]
 >
-> Dockerfile support is **opt-in**. It is registered as a language but excluded from the default `shellformat.effectLanguages`, so it won't format on save unless you enable it.
+> `Dockerfile` support is **opt-in**. It is registered as a language but excluded from the default `shellformat.effectLanguages`, so it won't format on save unless you enable it.
 >
-> The upstream tool [shfmt](https://github.com/mvdan/sh) does not officially support Dockerfile. However, since common Dockerfile syntax (e.g. `RUN` with shell commands) falls within the shell grammar, shfmt can format it via the `--ln=dockerfile` language variant. Because this is not an officially supported path and may mangle complex multiline constructs, it is disabled by default — enable it only if it works for your use case.
+> The upstream tool [`shfmt`](https://github.com/mvdan/sh) does not officially support Dockerfile. However, the common `Dockerfile` syntax (e.g. `RUN` with shell commands) falls within the shell grammar, in this case, `shfmt` can format `Dockerfille`. Because this is not an officially supported path and may mangle complex multiline constructs, it is disabled by default — enable it only if it works for your use case.
 >
 > To enable, add `dockerfile` to `shellformat.effectLanguages`, or enable `shellformat.useEditorConfig` and add the following to your `.editorconfig`:
 >

@@ -88,9 +88,6 @@ export class Formatter {
         if (/\.(zsh|zshrc|zshenv|zprofile|zlogin|zlogout)$/.test(document.fileName)) {
           shfmtFlags.push('--ln=zsh');
         }
-        if (/Dockerfile(\..*)?$|\.dockerfile$/i.test(document.fileName)) {
-          shfmtFlags.push('--ln=dockerfile');
-        }
 
         if (binPath) {
           if (fileExists(binPath)) {

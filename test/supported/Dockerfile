@@ -6,7 +6,7 @@ ENV AUTHOR=foxundermoon website=https://fox.mn
 
 WORKDIR /app
 
-RUN   mkdr test && \
+RUN   mkdir test && \
 cd test && \
 echo "hello world" > helloworld && \
 cat helloworld && \
