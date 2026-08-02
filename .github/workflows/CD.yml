@@ -33,7 +33,7 @@ jobs:
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v2
         with:
-          node-version: '24'
+          node-version: "24"
       - run: yarn
       - run: yarn format-check
       # https://github.com/GabrielBB/xvfb-action
@@ -61,7 +61,7 @@ jobs:
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v2
         with:
-          node-version: '20'
+          node-version: "24"
       - name: read version
         run: |
           PACKAGE_VERSION=$(node -p "require('./package.json').version")
