@@ -2,7 +2,7 @@
 
 Check [Keep a Changelog](https://keepachangelog.com/) for recommendations on how to structure this file.
 
-## Unreleased
+## 0.4.0
 
 - feat: re-add `Dockerfile` support as opt-in via `shellformat.effectLanguages` or `.editorconfig`, fixing [#14](https://github.com/lumirelle/vs-shell-format/issues/14)
   - shfmt does not officially support `Dockerfile`, but common `Dockerfile` syntax falls within the shell grammar, in this case, `shfmt` can format `Dockerfille`. Disabled by default since it may mangle complex multiline constructs.
