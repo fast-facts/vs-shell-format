@@ -20,11 +20,14 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run format-check
-      - name: Run headless test
+      - name: Run tests
+        if: matrix.os == 'ubuntu-latest'
         uses: GabrielBB/xvfb-action@v1.7
-        if: matrix.os != 'windows-latest'
         with:
           run: npm test
+      - name: Run tests
+        if: matrix.os != 'ubuntu-latest'
+        run: npm test
 
   release:
     runs-on: ubuntu-latest
