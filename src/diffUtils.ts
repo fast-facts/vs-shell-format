@@ -1,24 +1,6 @@
-import {
-  TextDocument,
-  Position,
-  Range,
-  TextEdit,
-  Uri,
-  WorkspaceEdit,
-  TextEditorEdit,
-} from 'vscode';
+import { Position, Range, TextEdit } from 'vscode';
 
-import { getExecutableFileUnderPath } from './pathUtil';
 import jsDiff = require('diff');
-
-let diffToolAvailable: boolean = null;
-
-export function isDiffToolAvailable(): boolean {
-  if (diffToolAvailable == null) {
-    diffToolAvailable = getExecutableFileUnderPath('diff') != null;
-  }
-  return diffToolAvailable;
-}
 
 export enum EditTypes {
   EDIT_DELETE,
@@ -49,40 +31,6 @@ export class Edit {
 
       case EditTypes.EDIT_REPLACE:
         return TextEdit.replace(new Range(this.start, this.end), this.text);
-    }
-  }
-
-  // Applies Edit using given TextEditorEdit
-  applyUsingTextEditorEdit(editBuilder: TextEditorEdit): void {
-    switch (this.action) {
-      case EditTypes.EDIT_INSERT:
-        editBuilder.insert(this.start, this.text);
-        break;
-
-      case EditTypes.EDIT_DELETE:
-        editBuilder.delete(new Range(this.start, this.end));
-        break;
-
-      case EditTypes.EDIT_REPLACE:
-        editBuilder.replace(new Range(this.start, this.end), this.text);
-        break;
-    }
-  }
-
-  // Applies Edits to given WorkspaceEdit
-  applyUsingWorkspaceEdit(workspaceEdit: WorkspaceEdit, fileUri: Uri): void {
-    switch (this.action) {
-      case EditTypes.EDIT_INSERT:
-        workspaceEdit.insert(fileUri, this.start, this.text);
-        break;
-
-      case EditTypes.EDIT_DELETE:
-        workspaceEdit.delete(fileUri, new Range(this.start, this.end));
-        break;
-
-      case EditTypes.EDIT_REPLACE:
-        workspaceEdit.replace(fileUri, new Range(this.start, this.end), this.text);
-        break;
     }
   }
 }
@@ -142,7 +90,6 @@ function parseUniDiffs(diffOutput: jsDiff.IUniDiff[]): FilePatch[] {
   return filePatches;
 }
 
-('use strict');
 /**
  * Returns a FilePatch object by generating diffs between given oldStr and newStr using the diff module
  *
@@ -167,21 +114,4 @@ export function getEdits(fileName: string, oldStr: string, newStr: string): File
   );
   let filePatches: FilePatch[] = parseUniDiffs([unifiedDiffs]);
   return filePatches[0];
-}
-
-/**
- * Uses diff module to parse given diff string and returns edits for files
- *
- * @param diffStr : Diff string in unified format. http://www.gnu.org/software/diffutils/manual/diffutils.html#Unified-Format
- *
- * @returns Array of FilePatch objects, one for each file
- */
-export function getEditsFromUnifiedDiffStr(diffstr: string): FilePatch[] {
-  // Workaround for the bug https://github.com/kpdecker/jsdiff/issues/135
-  if (diffstr.startsWith('---')) {
-    diffstr = diffstr.split('---').join('Index\n---');
-  }
-  let unifiedDiffs: jsDiff.IUniDiff[] = jsDiff.parsePatch(diffstr);
-  let filePatches: FilePatch[] = parseUniDiffs(unifiedDiffs);
-  return filePatches;
 }
