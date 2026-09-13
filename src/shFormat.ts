@@ -48,33 +48,26 @@ export class Formatter {
     return this.formatDocumentWithContent(content, document, options);
   }
 
-  public formatDocumentWithContent(
+  public async formatDocumentWithContent(
     content: string,
     document: TextDocument,
     options?: vscode.FormattingOptions
-  ): Thenable<vscode.TextEdit[]> {
+  ): Promise<vscode.TextEdit[]> {
     if (document.languageId === 'dockerfile') {
-      return (async () => {
-        try {
-          const { formatDockerfileContents } = await import('@reteps/dockerfmt');
-          const result = await formatDockerfileContents(content, {
-            indent: options?.insertSpaces ? options.tabSize : 4,
-            trailingNewline: true,
-            spaceRedirects: false,
-          });
-          this.diagnosticCollection.delete(document.uri);
-          const filePatch = getEdits(document.fileName, content, result);
-          const textEdits: TextEdit[] = [];
-          filePatch.edits.forEach((edit) => {
-            textEdits.push(edit.apply());
-          });
-          return textEdits;
-        } catch (error) {
-          const message = error instanceof Error ? error.message : String(error);
-          output.appendLine(message);
-          return Promise.reject(message);
-        }
-      })();
+      try {
+        const { formatDockerfileContents } = await import('@reteps/dockerfmt');
+        const result = await formatDockerfileContents(content, {
+          indent: options?.insertSpaces ? options.tabSize : 4,
+          trailingNewline: true,
+          spaceRedirects: false,
+        });
+        this.diagnosticCollection.delete(document.uri);
+        return getEdits(document.fileName, content, result).edits.map((edit) => edit.apply());
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        output.appendLine(message);
+        throw message;
+      }
     }
     return new Promise((resolve, reject) => {
       try {
