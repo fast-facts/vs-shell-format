@@ -67,8 +67,8 @@
 
 ## Custom configuration
 
-- `shellformat.path` the shfmt fullpath example [mac,linux]: `/usr/local/bin/shfmt` [windows]: `C:\\bin\\shfmt.exe`
-- `shellformat.flag` shfmt -h to see detailed usage.
+- `shellformat.path` the shfmt fullpath example [mac,linux]: `/usr/local/bin/shfmt` [windows]: `C:\\bin\\shfmt.exe`. User setting only.
+- `shellformat.flag` shfmt -h to see detailed usage. User setting only.
 
 ---
 
