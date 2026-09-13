@@ -1,17 +1,14 @@
 import * as vscode from 'vscode';
 import * as child_process from 'child_process';
-import * as path from 'path';
-import * as fs from 'fs';
-import { fileExists, getExecutableFileUnderPath, substitutePath } from './pathUtil';
+import { fileExists, substitutePath } from './pathUtil';
 import { userOrDefaultSetting } from './userSettings';
 import { output } from './extension';
 
-import { isDiffToolAvailable, getEdits, getEditsFromUnifiedDiffStr } from '../src/diffUtils';
+import { getEdits } from '../src/diffUtils';
 
 import {
   Diagnostic,
   DiagnosticSeverity,
-  Range,
   DiagnosticCollection,
   TextDocument,
   Position,
@@ -20,8 +17,7 @@ import {
 } from 'vscode';
 import * as editorconfig from 'editorconfig';
 
-import { config } from './config';
-import { getPlatFormFilename, getDestPath } from './downloader';
+import { getDestPath } from './downloader';
 import { prepareShfmt } from './shfmtFlags';
 export const configurationPrefix = 'shellformat';
 
@@ -33,17 +29,6 @@ export enum ConfigItemName {
   UseEditorConfig = 'useEditorConfig',
 }
 
-const defaultDownloadDirParrent = '/usr/local';
-const defaultDownloadDir = '/usr/local/bin';
-const defaultDownloadShfmtPath = `${defaultDownloadDir}/shfmt`;
-const fileExtensionMap = {
-  arm: 'arm',
-  arm64: 'arm64',
-  ia32: '386',
-  mips: 'mips',
-  x32: '386',
-  x64: 'amd64',
-};
 export class Formatter {
   static formatCommand = 'shfmt';
   diagnosticCollection: DiagnosticCollection;
@@ -67,13 +52,12 @@ export class Formatter {
     );
     const range = new vscode.Range(start, end);
     const content = document.getText(range);
-    return this.formatDocumentWithContent(content, document, range, options);
+    return this.formatDocumentWithContent(content, document, options);
   }
 
   public formatDocumentWithContent(
     content: string,
     document: TextDocument,
-    range: Range,
     options?: vscode.FormattingOptions
   ): Thenable<vscode.TextEdit[]> {
     return new Promise((resolve, reject) => {
@@ -203,18 +187,7 @@ export class Formatter {
 }
 
 export class ShellDocumentFormattingEditProvider implements vscode.DocumentFormattingEditProvider {
-  private settings: vscode.WorkspaceConfiguration;
-
-  constructor(
-    public formatter: Formatter,
-    settings?: vscode.WorkspaceConfiguration
-  ) {
-    if (settings === undefined) {
-      this.settings = vscode.workspace.getConfiguration(configurationPrefix);
-    } else {
-      this.settings = settings;
-    }
-  }
+  constructor(public formatter: Formatter) {}
 
   public provideDocumentFormattingEdits(
     document: vscode.TextDocument,
@@ -223,126 +196,6 @@ export class ShellDocumentFormattingEditProvider implements vscode.DocumentForma
   ): Thenable<vscode.TextEdit[]> {
     return this.formatter.formatDocument(document, options);
   }
-}
-
-/**
- * deprecated
- * will clean
- *  */
-
-export function checkEnv() {
-  const settings = vscode.workspace.getConfiguration(configurationPrefix);
-  let configBinPath = false;
-  if (settings) {
-    let flag: string = settings.get(ConfigItemName.Flag);
-    if (flag) {
-      if (flag.includes('-w')) {
-        vscode.window.showWarningMessage('can not set -w flag  please fix config');
-      }
-    }
-    let binPath: string = settings.get(ConfigItemName.Path);
-    if (binPath) {
-      configBinPath = true;
-      if (fileExists(binPath)) {
-        this.formatCommand = binPath;
-      } else {
-        vscode.window.showErrorMessage(
-          `the config [${configurationPrefix}.${ConfigItemName.Path}] file not exists please fix it`
-        );
-      }
-    }
-  }
-  if (!configBinPath && !isExecutedFmtCommand() && !fileExists(defaultDownloadShfmtPath)) {
-    if (process.platform == 'darwin') {
-      installFmtForMaxos();
-    } else if (
-      [
-        // "android",
-        // "darwin",
-        'freebsd',
-        'linux',
-        'openbsd',
-        // "sunos",
-        // "win32",
-        // "cygwin"
-      ].includes(process.platform)
-    ) {
-      // installForLinux();
-      showMamualInstallMessage();
-    } else {
-      showMamualInstallMessage();
-    }
-  }
-}
-
-function showMamualInstallMessage() {
-  vscode.window.showErrorMessage(
-    `[${configurationPrefix}.${ConfigItemName.Path}]not found!  please install manually https://mvdan.cc/sh/cmd/shfmt `
-  );
-}
-function installFmtForMaxos() {
-  if (getExecutableFileUnderPath('brew')) {
-    vscode.window.showInformationMessage('will install shfmt by brew');
-    const terminal = vscode.window.createTerminal();
-    terminal.show();
-    terminal.sendText('brew install shfmt', true);
-    terminal.sendText("echo '**Enjoy shellscript!**'", true);
-    terminal.sendText("echo 'fork or star  https://github.com/foxundermoon/vs-shell-format'", true);
-  } else {
-    installForLinux();
-  }
-}
-
-/** will clean */
-function installForLinux() {
-  //todo fix the ubuntu permission issue
-  return;
-  try {
-    const url = getDownloadUrl();
-    vscode.window.showInformationMessage('will install shfmt by curl');
-    const terminal = vscode.window.createTerminal();
-    terminal.show();
-    if (!fs.existsSync(defaultDownloadDir)) {
-      try {
-        fs.accessSync(defaultDownloadDirParrent, fs.constants.W_OK);
-        terminal.sendText(`mkdir -p ${defaultDownloadDir}`, true);
-      } catch (err) {
-        terminal.sendText(`sudo mkdir -p ${defaultDownloadDir}`, true);
-      }
-    }
-
-    try {
-      fs.accessSync(defaultDownloadDir, fs.constants.W_OK);
-      terminal.sendText(`curl -L '${url}' --output  /usr/local/bin/shfmt`, true);
-      terminal.sendText(`chmod a+x /usr/local/bin/shfmt`, true);
-    } catch (err) {
-      terminal.sendText(`sudo curl -L '${url}' --output  /usr/local/bin/shfmt`, true);
-      terminal.sendText(`sudo chmod a+x /usr/local/bin/shfmt`, true);
-    }
-    terminal.sendText("echo '**Enjoy shellscript!**'", true);
-    terminal.sendText("echo 'fork or star https://github.com/foxundermoon/vs-shell-format'", true);
-  } catch (error) {
-    vscode.window.showWarningMessage(
-      'install shfmt failed , please install manually https://mvdan.cc/sh/cmd/shfmt'
-    );
-  }
-}
-
-function getDownloadUrl(): String {
-  try {
-    const extension = fileExtensionMap[process.arch];
-    const url = `https://github.com/mvdan/sh/releases/download/${config.shfmtVersion}/shfmt_${config.shfmtVersion}_${process.platform}_${extension}`;
-    return url;
-  } catch (error) {
-    throw new Error('nor sourport');
-  }
-}
-
-/**
- * will clean
- */
-function isExecutedFmtCommand(): Boolean {
-  return getExecutableFileUnderPath(Formatter.formatCommand) != null;
 }
 
 export function getSettings(key: string) {
