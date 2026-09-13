@@ -39,12 +39,12 @@ export interface FilePatch {
   edits: Edit[];
 }
 
-function parseUniDiffs(diffOutput: jsDiff.ParsedDiff[]): FilePatch[] {
+function parseUniDiffs(diffOutput: jsDiff.StructuredPatch[]): FilePatch[] {
   let filePatches: FilePatch[] = [];
-  diffOutput.forEach((uniDiff: jsDiff.ParsedDiff) => {
+  diffOutput.forEach((uniDiff: jsDiff.StructuredPatch) => {
     let edit: Edit = null;
     let edits: Edit[] = [];
-    uniDiff.hunks.forEach((hunk: jsDiff.Hunk) => {
+    uniDiff.hunks.forEach((hunk: jsDiff.StructuredPatchHunk) => {
       let startLine = hunk.oldStart;
       hunk.lines.forEach((line) => {
         switch (line.substr(0, 1)) {
@@ -87,7 +87,7 @@ export function getEdits(fileName: string, oldStr: string, newStr: string): File
     oldStr = oldStr.split('\r\n').join('\n');
     newStr = newStr.split('\r\n').join('\n');
   }
-  let unifiedDiffs: jsDiff.ParsedDiff = jsDiff.structuredPatch(
+  let unifiedDiffs: jsDiff.StructuredPatch = jsDiff.structuredPatch(
     fileName,
     fileName,
     oldStr,
