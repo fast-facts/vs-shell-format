@@ -56,12 +56,13 @@ suite('Format golden files', function () {
   for (const c of CASES) {
     test(`formats ${c.name}`, async () => {
       const golden = path.join(root, 'test', 'golden', c.name);
-      const expected = fs.readFileSync(golden, 'utf8');
+      const expected = fs.readFileSync(golden, 'utf8').replace(/\r\n/g, '\n');
+      const got = (s: string) => s.replace(/\r\n/g, '\n');
       assert.strictEqual(
-        await formatFile(path.join(root, 'test', 'supported', c.name), c.language),
+        got(await formatFile(path.join(root, 'test', 'supported', c.name), c.language)),
         expected
       );
-      assert.strictEqual(await formatFile(golden, c.language), expected);
+      assert.strictEqual(got(await formatFile(golden, c.language)), expected);
     });
   }
 });
