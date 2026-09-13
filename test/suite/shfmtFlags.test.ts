@@ -41,6 +41,12 @@ suite('prepareShfmt', () => {
     assert.deepStrictEqual(runFlags('t.dash'), ['--ln=posix', '-i=4']);
   });
 
+  test('packaging scripts fall back to bash with no --ln flag', () => {
+    for (const name of ['PKGBUILD', 'APKBUILD', 'foo.ebuild', 'foo.eclass']) {
+      assert.deepStrictEqual(runFlags(name), ['-i=4']);
+    }
+  });
+
   test('rejects a missing custom path and does not return a command', () => {
     const result = prepareShfmt({
       ...BASE,
