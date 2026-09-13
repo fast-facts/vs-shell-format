@@ -1,5 +1,6 @@
 import * as https from 'https';
 import * as fs from 'fs';
+import * as crypto from 'crypto';
 import { IncomingMessage } from 'http';
 import { config } from './config';
 import * as vscode from 'vscode';
@@ -8,6 +9,24 @@ import * as child_process from 'child_process';
 import { getSettings } from './shFormat';
 import { shellformatPath } from './extension';
 const MaxRedirects = 10;
+const allowedDownloadHosts = [
+  'github.com',
+  'objects.githubusercontent.com',
+  'github-releases.githubusercontent.com',
+  'release-assets.githubusercontent.com',
+];
+
+function allowedDownloadUrl(url: string): string {
+  const parsed = new URL(url);
+  if (parsed.protocol !== 'https:') {
+    throw new Error(`blocked download protocol: ${parsed.protocol}`);
+  }
+  if (!allowedDownloadHosts.includes(parsed.hostname)) {
+    throw new Error(`blocked download host: ${parsed.hostname}`);
+  }
+  return parsed.href;
+}
+
 export interface DownloadProgress {
   (progress: number): void;
 }
@@ -25,6 +44,26 @@ export async function download(
   // deprecated
 }
 
+export async function verifyShfmtChecksum(destPath: string): Promise<void> {
+  try {
+    const filename = getPlatFormFilename();
+    const expected = config.shfmtChecksums[filename];
+    if (!expected) {
+      throw new Error(`unknown shfmt filename: ${filename}`);
+    }
+    const actual = crypto
+      .createHash('sha256')
+      .update(await fs.promises.readFile(destPath))
+      .digest('hex');
+    if (actual !== expected) {
+      throw new Error(`shfmt hash mismatch for ${filename}`);
+    }
+  } catch (err) {
+    await cleanFile(destPath);
+    throw err;
+  }
+}
+
 export async function download2(
   srcUrl: string,
   destPath: string,
@@ -32,38 +71,49 @@ export async function download2(
 ) {
   return new Promise(async (resolve, reject) => {
     let response;
-    for (let i = 0; i < MaxRedirects; ++i) {
-      response = await new Promise<IncomingMessage>((resolve) => https.get(srcUrl, resolve));
-      if (response.statusCode >= 300 && response.statusCode < 400 && response.headers.location) {
-        srcUrl = response.headers.location;
-      } else {
-        break;
+    try {
+      for (let i = 0; i < MaxRedirects; ++i) {
+        srcUrl = allowedDownloadUrl(srcUrl);
+        response = await new Promise<IncomingMessage>((resolve) => https.get(srcUrl, resolve));
+        if (response.statusCode >= 300 && response.statusCode < 400 && response.headers.location) {
+          srcUrl = new URL(response.headers.location, srcUrl).href;
+        } else {
+          break;
+        }
       }
+    } catch (err) {
+      reject(err);
+      return;
     }
     if (response.statusCode < 200 || response.statusCode >= 300) {
       reject(new Error(`HTTP status ${response.statusCode} : ${response.statusMessage}`));
+      return;
     }
     if (response.headers['content-type'] != 'application/octet-stream') {
       reject(new Error('HTTP response does not contain an octet stream'));
-    } else {
-      let stm = fs.createWriteStream(destPath, { mode: 0o755 });
-      let pipeStm = response.pipe(stm);
-      if (progress) {
-        let contentLength = response.headers['content-length']
-          ? Number.parseInt(response.headers['content-length'])
-          : null;
-        let downloaded = 0;
-        let old_downloaded = 0;
-        response.on('data', (chunk) => {
-          old_downloaded = downloaded;
-          downloaded += chunk.length;
-          progress(downloaded, contentLength, old_downloaded);
-        });
-      }
-      pipeStm.on('finish', resolve);
-      pipeStm.on('error', reject);
-      response.on('error', reject);
+      return;
     }
+    const stm = fs.createWriteStream(destPath, { mode: 0o644 });
+    const pipeStm = response.pipe(stm);
+    if (progress) {
+      const contentLength = response.headers['content-length']
+        ? Number.parseInt(response.headers['content-length'])
+        : null;
+      let downloaded = 0;
+      let old_downloaded = 0;
+      response.on('data', (chunk) => {
+        old_downloaded = downloaded;
+        downloaded += chunk.length;
+        progress(downloaded, contentLength, old_downloaded);
+      });
+    }
+    pipeStm.on('finish', () => {
+      verifyShfmtChecksum(destPath)
+        .then(() => fs.promises.chmod(destPath, 0o755))
+        .then(() => resolve(undefined), reject);
+    });
+    pipeStm.on('error', reject);
+    response.on('error', reject);
   });
 }
 
