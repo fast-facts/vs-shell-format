@@ -6,19 +6,13 @@
 <a href="https://marketplace.visualstudio.com/items?itemName=vs-shell-format.shell-format-secure" target="__blank"><img src="https://vsmarketplacebadges.dev/rating/vs-shell-format.shell-format-secure.svg" alt="Rating" /></a>
 <a href="https://github.com/fast-facts/vs-shell-format" target="__blank"><img src="https://github.com/fast-facts/vs-shell-format/actions/workflows/CI.yml/badge.svg" /></a>
 
-<!-- <a href="https://kermanx.github.io/reactive-vscode/" target="__blank"><img src="https://img.shields.io/badge/made_with-reactive--vscode-%23007ACC?style=flat&labelColor=%23229863"  alt="Made with reactive-vscode" /></a> -->
-
 > [!Note]
 >
 > This is a fork of [foxundermoon/vs-shell-format](https://github.com/foxundermoon/vs-shell-format).
 >
-> Since the original package no longer maintained, I just try to fork this package, fix this issue and re-publish new package to marketplace.
+> Since the original package is no longer maintained, I just try to fork this package, fix this issue and re-publish new package to marketplace.
 >
 > See <https://github.com/foxundermoon/vs-shell-format/issues/396>.
-
-[Get it on the VS Code Marketplace!](https://marketplace.visualstudio.com/items?itemName=vs-shell-format.shell-format-secure)
-
-**Enjoy shellscript!**
 
 ## Supported file types or languages
 
@@ -26,7 +20,7 @@
 >
 > `Dockerfile` support is **opt-in**. It is registered as a language but excluded from the default `shellformat.effectLanguages`, so it won't format on save unless you enable it.
 >
-> The upstream tool [`shfmt`](https://github.com/mvdan/sh) does not officially support Dockerfile. However, the common `Dockerfile` syntax (e.g. `RUN` with shell commands) falls within the shell grammar, in this case, `shfmt` can format `Dockerfille`. Because this is not an officially supported path and may mangle complex multiline constructs, it is disabled by default — enable it only if it works for your use case.
+> The upstream tool [`shfmt`](https://github.com/mvdan/sh) does not officially support Dockerfile. However, the common `Dockerfile` syntax (e.g. `RUN` with shell commands) falls within the shell grammar, in this case, `shfmt` can format `Dockerfile`. Because this is not an officially supported path and may mangle complex multiline constructs, it is disabled by default — enable it only if it works for your use case.
 >
 > To enable, add `dockerfile` to `shellformat.effectLanguages`, or enable `shellformat.useEditorConfig` and add the following to your `.editorconfig`:
 >
@@ -39,16 +33,18 @@
 >
 > See [#14](https://github.com/fast-facts/vs-shell-format/issues/14) for background.
 
-| language    | extension                | describe              |
-| ----------- | ------------------------ | --------------------- |
-| shellscript | .sh .bash                | shell script files    |
-| dockerfile  | Dockerfile \*.dockerfile | dockerfile (opt-in)   |
-| ignore      | .gitignore .dockerignore | ignore files          |
-| properties  | .properties              | java properties files |
-| jvmoptions  | .vmoptions , jvm.options | jvm options file      |
-| hosts       | /etc/hosts               | hosts file            |
-| bats        | .bats                    | Bats test file        |
-| zsh         | .zsh .zshrc .zshenv      | zsh script files      |
+| language    | extension                                      | description            |
+| ----------- | ---------------------------------------------- | ---------------------- |
+| shellscript | .sh .bash                                      | shell script files     |
+| dockerfile  | Dockerfile, Dockerfile.*, \*.dockerfile        | dockerfile (opt-in)    |
+| dotenv      | .env .env.* env                                | dotenv files           |
+| ignore      | .gitignore .dockerignore                       | ignore files           |
+| properties  | .properties (also spring-boot-properties)      | java properties files  |
+| jvmoptions  | .vmoptions , jvm.options                       | jvm options file       |
+| hosts       | hosts                                          | hosts file             |
+| azcli       | .azcli                                         | Azure CLI script files |
+| bats        | .bats                                          | Bats test file         |
+| zsh         | .zsh .zshrc .zshenv .zprofile .zlogin .zlogout | zsh script files       |
 
 ---
 
@@ -56,53 +52,26 @@
 
 ## Usage
 
-<kbd>shift</kbd>+<kbd>option</kbd>+<kbd>f</kbd>
+<kbd>shift</kbd>+<kbd>alt</kbd>+<kbd>f</kbd> (Windows/Linux) or <kbd>shift</kbd>+<kbd>option</kbd>+<kbd>f</kbd> (Mac)
 
-<kbd>shift</kbd>+<kbd>command</kbd>+<kbd>p</kbd> then type `Format Document`
+<kbd>ctrl</kbd>+<kbd>shift</kbd>+<kbd>p</kbd> (Windows/Linux) or <kbd>command</kbd>+<kbd>shift</kbd>+<kbd>p</kbd> (Mac), then type `Format Document`
 
 ## Dependencies
 
-- [shfmt](https://github.com/mvdan/sh#shfmt)
+- [shfmt](https://github.com/mvdan/sh#shfmt) — downloaded automatically on first use (pinned version in `src/config.ts`, checksum-verified). Set `shellformat.path` only to use your own binary instead.
 
 ## Custom configuration
 
-- `shellformat.path` the shfmt fullpath example [mac,linux]: `/usr/local/bin/shfmt` [windows]: `C:\\bin\\shfmt.exe`. User setting only.
-- `shellformat.flag` shfmt -h to see detailed usage. User setting only.
+- `shellformat.path` the shfmt fullpath example [mac,linux]: `/usr/local/bin/shfmt` [windows]: `C:\bin\shfmt.exe`. User setting only.
+- `shellformat.flag` shfmt -h to see detailed usage. User setting only. Ignored when `shellformat.useEditorConfig` is on. Do not use `-w`.
+- `shellformat.effectLanguages` the languages the formatter runs on. Default is all supported languages except `dockerfile`. Add `dockerfile` to opt in.
+- `shellformat.useEditorConfig` use `.editorconfig` for shfmt flags instead of `shellformat.flag`. Supported keys: `indent_style`, `indent_size`, `shell_variant`, `binary_next_line`, `switch_case_indent`, `space_redirects`, `keep_padding`, `function_next_line`.
 
 ---
-
-## Links
-
-### [Source code](https://github.com/fast-facts/vs-shell-format)
-
-### [shfmt (mvdan/sh)](https://github.com/mvdan/sh)
 
 ## Contributors of the original project
 
 ### Code Contributors
 
-This project exists thanks to all the people who contribute. [[Contribute](CONTRIBUTING.md)].
+This project exists thanks to all the people who contribute.
 <a href="https://github.com/foxundermoon/vs-shell-format/graphs/contributors"><img src="https://opencollective.com/vsformat/contributors.svg?width=890&button=false" /></a>
-
-### Financial Contributors
-
-Become a financial contributor and help us sustain our community. [[Contribute](https://opencollective.com/vsformat/contribute)]
-
-#### Individuals
-
-<a href="https://opencollective.com/vsformat"><img src="https://opencollective.com/vsformat/individuals.svg?width=890"></a>
-
-#### Organizations
-
-Support this project with your organization. Your logo will show up here with a link to your website. [[Contribute](https://opencollective.com/vsformat/contribute)]
-
-<a href="https://opencollective.com/vsformat/organization/0/website"><img src="https://opencollective.com/vsformat/organization/0/avatar.svg"></a>
-<a href="https://opencollective.com/vsformat/organization/1/website"><img src="https://opencollective.com/vsformat/organization/1/avatar.svg"></a>
-<a href="https://opencollective.com/vsformat/organization/2/website"><img src="https://opencollective.com/vsformat/organization/2/avatar.svg"></a>
-<a href="https://opencollective.com/vsformat/organization/3/website"><img src="https://opencollective.com/vsformat/organization/3/avatar.svg"></a>
-<a href="https://opencollective.com/vsformat/organization/4/website"><img src="https://opencollective.com/vsformat/organization/4/avatar.svg"></a>
-<a href="https://opencollective.com/vsformat/organization/5/website"><img src="https://opencollective.com/vsformat/organization/5/avatar.svg"></a>
-<a href="https://opencollective.com/vsformat/organization/6/website"><img src="https://opencollective.com/vsformat/organization/6/avatar.svg"></a>
-<a href="https://opencollective.com/vsformat/organization/7/website"><img src="https://opencollective.com/vsformat/organization/7/avatar.svg"></a>
-<a href="https://opencollective.com/vsformat/organization/8/website"><img src="https://opencollective.com/vsformat/organization/8/avatar.svg"></a>
-<a href="https://opencollective.com/vsformat/organization/9/website"><img src="https://opencollective.com/vsformat/organization/9/avatar.svg"></a>

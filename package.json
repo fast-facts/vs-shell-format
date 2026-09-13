@@ -189,7 +189,6 @@
             "hosts",
             "jvmoptions",
             "ignore",
-            "gitignore",
             "properties",
             "spring-boot-properties",
             "azcli",
