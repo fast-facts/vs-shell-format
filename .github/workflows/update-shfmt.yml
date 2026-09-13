@@ -26,7 +26,7 @@ jobs:
             echo "shfmt already up to date ($CURRENT)"
             exit 0
           fi
-          ASSETS=$(gh api repos/mvdan/sh/releases/latest --jq '.assets[] | select(.name | startswith("shfmt_")) | "    '\''\(.name)'\'': '\''\(.digest | ltrimstr("sha256:"))'\''," | sort')
+          ASSETS=$(gh api repos/mvdan/sh/releases/latest --jq '.assets[] | select(.name | startswith("shfmt_")) | "    '\''\(.name)'\'': '\''\(.digest | ltrimstr("sha256:"))'\''," ' | sort)
           cat > src/config.ts <<EOF
           export const config = {
             shfmtVersion: '$LATEST',
