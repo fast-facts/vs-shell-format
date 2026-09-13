@@ -28,7 +28,10 @@
     "documentFormattingProvider": "true",
     "untrustedWorkspaces": {
       "supported": "limited",
-      "restrictedConfigurations": ["shellformat.path", "shellformat.flag"]
+      "restrictedConfigurations": [
+        "shellformat.path",
+        "shellformat.flag"
+      ]
     }
   },
   "icon": "logo.png",
@@ -213,6 +216,24 @@
     "test": "node ./out/test/runTest.js",
     "format": "pretty-quick",
     "format-check": "pretty-quick --check"
+  },
+  "release": {
+    "plugins": [
+      "@semantic-release/commit-analyzer",
+      "@semantic-release/release-notes-generator",
+      [
+        "semantic-release-vsce",
+        {
+          "packageVsix": true
+        }
+      ],
+      [
+        "@semantic-release/github",
+        {
+          "assets": "*.vsix"
+        }
+      ]
+    ]
   },
   "devDependencies": {
     "@types/mocha": "10.0.10",

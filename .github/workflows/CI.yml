@@ -7,34 +7,20 @@ on:
 jobs:
   unit-test:
     name: Test
-    runs-on: ${{ matrix.config.os }} # we run many different builds
+    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        config:
-          - os: ubuntu-latest
-          - os: macos-latest
-          - os: windows-latest
+        os: [ubuntu-latest, macos-latest, windows-latest]
     steps:
-      - name: Get yarn cache directory path
-        id: yarn-cache-dir-path
-        run: echo "::set-output name=dir::$(yarn cache dir)"
-
-      - uses: actions/cache@v4
-        id: yarn-cache # use this to check for `cache-hit` (`steps.yarn-cache.outputs.cache-hit != 'true'`)
-        with:
-          path: ${{ steps.yarn-cache-dir-path.outputs.dir }}
-          key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-yarn-
-      - uses: actions/checkout@v2
-      - uses: actions/setup-node@v2
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: '24'
+          cache: yarn
       - run: yarn
       - run: yarn format-check
-      # https://github.com/GabrielBB/xvfb-action
       - name: Run headless test
         uses: GabrielBB/xvfb-action@v1.7
-        if: matrix.config.os != 'windows-latest'
+        if: matrix.os != 'windows-latest'
         with:
           run: yarn test
