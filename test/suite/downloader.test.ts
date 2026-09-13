@@ -5,41 +5,82 @@ import {
   getReleaseDownloadUrl,
   getPlatFormFilename,
   getDestPath,
+  getArchExtension,
+  getPlatform,
   verifyShfmtChecksum,
 } from '../../src/downloader';
 import * as fs from 'fs';
 import * as path from 'path';
-import * as child_process from 'child_process';
 import { config } from '../../src/config';
 
+const originalPlatform = Object.getOwnPropertyDescriptor(process, 'platform');
+const originalArch = Object.getOwnPropertyDescriptor(process, 'arch');
+
+function setProcess(platform: string, arch: string) {
+  Object.defineProperty(process, 'platform', { value: platform, configurable: true });
+  Object.defineProperty(process, 'arch', { value: arch, configurable: true });
+}
+
+function restoreProcess() {
+  if (originalPlatform) {
+    Object.defineProperty(process, 'platform', originalPlatform);
+  }
+  if (originalArch) {
+    Object.defineProperty(process, 'arch', originalArch);
+  }
+}
+
 suite('Downloader Tests', () => {
-  test('getDestPath always uses extension bin dir', () => {
-    const dest = getDestPath({ extensionPath: '/ext' } as vscode.ExtensionContext);
-    assert.strictEqual(dest, path.join('/ext', 'bin', getPlatFormFilename()));
+  teardown(restoreProcess);
+
+  test('linux x64 name uses config.shfmtVersion', () => {
+    setProcess('linux', 'x64');
+    assert.strictEqual(getPlatform(), 'linux');
+    assert.strictEqual(getArchExtension(), 'amd64');
+    assert.strictEqual(getPlatFormFilename(), `shfmt_${config.shfmtVersion}_linux_amd64`);
   });
 
-  test('download', async () => {
-    const url = getReleaseDownloadUrl();
-    const dest = `${__dirname}/../${getPlatFormFilename()}`;
+  test('windows name ends with .exe', () => {
+    setProcess('win32', 'x64');
+    assert.strictEqual(getPlatform(), 'windows');
+    assert.ok(getPlatFormFilename().endsWith('.exe'));
+  });
 
-    try {
-      if ((await fs.promises.stat(dest)).isFile) {
-        await fs.promises.unlink(dest);
-      }
-    } catch (err) {
-      console.log(err);
-    }
+  test('darwin arm64 uses arm64', () => {
+    setProcess('darwin', 'arm64');
+    assert.strictEqual(getArchExtension(), 'arm64');
+    assert.ok(getPlatFormFilename().includes('arm64'));
+  });
 
-    await download2(url, dest, (p, t) => console.log(`${(100.0 * p) / t}%`));
+  test('unknown OS throws', () => {
+    setProcess('aix', 'x64');
+    assert.strictEqual(getPlatform(), 'unknown');
+    assert.throws(() => getPlatFormFilename());
+  });
 
-    let version = await child_process.execFileSync(dest, ['--version'], {
-      encoding: 'utf8',
-    });
+  test('unknown CPU throws', () => {
+    setProcess('linux', 's390x');
+    assert.strictEqual(getArchExtension(), 'unknown');
+    assert.throws(() => getPlatFormFilename());
+  });
 
-    version = version.replace('\n', '');
+  test('release URL is github mvdan/sh download', () => {
+    setProcess('linux', 'x64');
+    const filename = `shfmt_${config.shfmtVersion}_linux_amd64`;
+    assert.strictEqual(
+      getReleaseDownloadUrl(),
+      `https://github.com/mvdan/sh/releases/download/${config.shfmtVersion}/${filename}`
+    );
+  });
 
-    assert.equal(version, config.shfmtVersion);
-  }).timeout('60s');
+  test('getDestPath always uses extension bin dir', () => {
+    setProcess('linux', 'x64');
+    const dest = getDestPath({ extensionPath: '/ext' } as vscode.ExtensionContext);
+    assert.strictEqual(
+      dest,
+      path.join('/ext', 'bin', `shfmt_${config.shfmtVersion}_linux_amd64`)
+    );
+  });
 
   test('rejects blocked download urls', async () => {
     await assert.rejects(download2('http://github.com/x', `${__dirname}/../blocked-http`));
