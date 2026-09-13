@@ -1,18 +1,21 @@
 import * as assert from 'assert';
-import { after } from 'mocha';
-
-// You can import and use all API from the 'vscode' module
-// as well as import your extension to test it
 import * as vscode from 'vscode';
-// import * as myExtension from '../extension';
+import { isAllowedTextDocument } from '../../src/extension';
 
-suite('Extension Test Suite', () => {
-  after(() => {
-    vscode.window.showInformationMessage('All tests done!');
+suite('isAllowedTextDocument', () => {
+  test('allows a listed language on untitled', async () => {
+    const document = await vscode.workspace.openTextDocument({
+      language: 'shellscript',
+      content: 'echo hello\n',
+    });
+    assert.strictEqual(isAllowedTextDocument(document), true);
   });
 
-  test('Sample test', () => {
-    assert.strictEqual(-1, [1, 2, 3].indexOf(5));
-    assert.strictEqual(-1, [1, 2, 3].indexOf(0));
+  test('rejects a language that is not in the list', async () => {
+    const document = await vscode.workspace.openTextDocument({
+      language: 'plaintext',
+      content: 'echo hello\n',
+    });
+    assert.strictEqual(isAllowedTextDocument(document), false);
   });
 });
