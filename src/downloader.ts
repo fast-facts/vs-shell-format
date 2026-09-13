@@ -27,23 +27,6 @@ function allowedDownloadUrl(url: string): string {
   return parsed.href;
 }
 
-export interface DownloadProgress {
-  (progress: number): void;
-}
-/**
- *  https://repl.it/@lordproud/Downloading-file-in-nodejs
- * @param url
- * @param path
- * @param progress
- */
-export async function download(
-  url: string,
-  path: string,
-  progress?: DownloadProgress
-): Promise<any> {
-  // deprecated
-}
-
 export async function verifyShfmtChecksum(destPath: string): Promise<void> {
   try {
     const filename = getPlatFormFilename();
