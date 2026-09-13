@@ -1,9 +1,9 @@
 # Shell-like Formatter For VS Code
 
-<a href="https://marketplace.visualstudio.com/items?itemName=vs-shell-format.shell-format-secure" target="__blank"><img src="https://img.shields.io/visual-studio-marketplace/v/vs-shell-format.shell-format-secure.svg?color=eee&amp;label=VS%20Code%20Marketplace&logo=visual-studio-code" alt="Visual Studio Marketplace Version" /></a>
-<a href="https://marketplace.visualstudio.com/items?itemName=vs-shell-format.shell-format-secure" target="__blank"><img src="https://img.shields.io/visual-studio-marketplace/d/vs-shell-format.shell-format-secure?style=flat-square&label=Downloads" /></a>
-<a href="https://marketplace.visualstudio.com/items?itemName=vs-shell-format.shell-format-secure" target="__blank"><img src="https://img.shields.io/visual-studio-marketplace/i/vs-shell-format.shell-format-secure?style=flat-square&label=Installs" /></a>
-<a href="https://marketplace.visualstudio.com/items?itemName=vs-shell-format.shell-format-secure" target="__blank"><img src="https://img.shields.io/visual-studio-marketplace/stars/vs-shell-format.shell-format-secure?style=flat-square&label=Rating" /></a>
+<a href="https://marketplace.visualstudio.com/items?itemName=vs-shell-format.shell-format-secure" target="__blank"><img src="https://vsmarketplacebadges.dev/version/vs-shell-format.shell-format-secure.svg" alt="Visual Studio Marketplace Version" /></a>
+<a href="https://marketplace.visualstudio.com/items?itemName=vs-shell-format.shell-format-secure" target="__blank"><img src="https://vsmarketplacebadges.dev/downloads/vs-shell-format.shell-format-secure.svg" alt="Downloads" /></a>
+<a href="https://marketplace.visualstudio.com/items?itemName=vs-shell-format.shell-format-secure" target="__blank"><img src="https://vsmarketplacebadges.dev/installs/vs-shell-format.shell-format-secure.svg" alt="Installs" /></a>
+<a href="https://marketplace.visualstudio.com/items?itemName=vs-shell-format.shell-format-secure" target="__blank"><img src="https://vsmarketplacebadges.dev/rating/vs-shell-format.shell-format-secure.svg" alt="Rating" /></a>
 <a href="https://github.com/fast-facts/vs-shell-format" target="__blank"><img src="https://github.com/fast-facts/vs-shell-format/actions/workflows/CI.yml/badge.svg" /></a>
 
 <!-- <a href="https://kermanx.github.io/reactive-vscode/" target="__blank"><img src="https://img.shields.io/badge/made_with-reactive--vscode-%23007ACC?style=flat&labelColor=%23229863"  alt="Made with reactive-vscode" /></a> -->
