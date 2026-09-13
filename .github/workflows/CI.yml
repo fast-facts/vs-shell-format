@@ -1,13 +1,8 @@
 name: CI
 on:
-  push:
-    paths-ignore:
-      - CHANGELOG.md
-      - README.md
   pull_request:
-    paths-ignore:
-      - CHANGELOG.md
-      - README.md
+    branches:
+      - master
 
 jobs:
   unit-test:
