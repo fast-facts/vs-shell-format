@@ -16,11 +16,11 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '24'
-          cache: yarn
-      - run: yarn
-      - run: yarn format-check
+          cache: npm
+      - run: npm ci
+      - run: npm run format-check
       - name: Run headless test
         uses: GabrielBB/xvfb-action@v1.7
         if: matrix.os != 'windows-latest'
         with:
-          run: yarn test
+          run: npm test
