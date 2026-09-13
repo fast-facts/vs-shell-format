@@ -155,8 +155,7 @@ export function getReleaseDownloadUrl() {
 }
 
 export function getDestPath(context: vscode.ExtensionContext): string {
-  let shfmtPath: string = getSettings('path');
-  return shfmtPath || path.join(context.extensionPath, 'bin', getPlatFormFilename());
+  return path.join(context.extensionPath, 'bin', getPlatFormFilename());
 }
 
 async function ensureDirectory(dir: string) {

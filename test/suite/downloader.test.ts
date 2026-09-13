@@ -10,13 +10,20 @@ import {
   download2,
   getReleaseDownloadUrl,
   getPlatFormFilename,
+  getDestPath,
 } from '../../src/downloader';
 import * as fs from 'fs';
+import * as path from 'path';
 import * as child_process from 'child_process';
 import { config } from '../../src/config';
 
 // Defines a Mocha test suite to group tests of similar kind together
 suite('Downloader Tests', () => {
+  test('getDestPath always uses extension bin dir', () => {
+    const dest = getDestPath({ extensionPath: '/ext' } as vscode.ExtensionContext);
+    assert.strictEqual(dest, path.join('/ext', 'bin', getPlatFormFilename()));
+  });
+
   // Defines a Mocha unit test
   test('download', async () => {
     const url = getReleaseDownloadUrl();
