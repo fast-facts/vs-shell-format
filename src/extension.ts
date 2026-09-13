@@ -4,6 +4,8 @@ import {
   Formatter,
   configurationPrefix,
   ConfigItemName,
+  output,
+  getSettings,
 } from './shFormat';
 
 import { checkInstall } from './downloader';
@@ -13,17 +15,11 @@ export enum DocumentFilterScheme {
   Untitled = 'untitled',
 }
 
-const formatOnSaveConfig = 'editor.formatOnSave';
-const formatDocumentCommand = 'editor.action.formatDocument';
-
-export const shellformatPath = 'shellformat.path';
-
-export const output = vscode.window.createOutputChannel('shellformat');
 export async function activate(context: vscode.ExtensionContext) {
   const settings = vscode.workspace.getConfiguration(configurationPrefix);
   const shfmter = new Formatter(context);
   const shFmtProvider = new ShellDocumentFormattingEditProvider(shfmter);
-  await checkInstall(context, output);
+  await checkInstall(context, output, getSettings('path'));
   const effectLanguages = settings.get<string[]>(ConfigItemName.EffectLanguages);
   if (effectLanguages) {
     for (const lang of effectLanguages) {
@@ -37,29 +33,4 @@ export async function activate(context: vscode.ExtensionContext) {
       }
     }
   }
-
-  const formatOnSave = vscode.workspace.getConfiguration().get(formatOnSaveConfig);
-  if (formatOnSave) {
-    vscode.workspace.onWillSaveTextDocument((event: vscode.TextDocumentWillSaveEvent) => {
-      // Only on explicit save
-      if (event.reason === 1 && isAllowedTextDocument(event.document)) {
-        vscode.commands.executeCommand(formatDocumentCommand);
-      }
-    });
-  }
 }
-
-export function isAllowedTextDocument(textDocument: vscode.TextDocument): boolean {
-  const settings = vscode.workspace.getConfiguration(configurationPrefix);
-  const effectLanguages = settings.get<string[]>(ConfigItemName.EffectLanguages);
-  const { scheme } = textDocument.uri;
-  if (effectLanguages) {
-    const checked = effectLanguages.find((e) => e === textDocument.languageId);
-    if (checked) {
-      return scheme === DocumentFilterScheme.File || scheme === DocumentFilterScheme.Untitled;
-    }
-  }
-  return false;
-}
-
-export function deactivate() {}

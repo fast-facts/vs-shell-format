@@ -1,13 +1,9 @@
-import * as https from 'https';
 import * as fs from 'fs';
 import * as crypto from 'crypto';
-import { IncomingMessage } from 'http';
 import { config } from './config';
 import * as vscode from 'vscode';
 import * as path from 'path';
 import * as child_process from 'child_process';
-import { getSettings } from './shFormat';
-import { shellformatPath } from './extension';
 const MaxRedirects = 10;
 const allowedDownloadHosts = [
   'github.com',
@@ -29,7 +25,7 @@ function allowedDownloadUrl(url: string): string {
 
 export async function verifyShfmtChecksum(destPath: string): Promise<void> {
   try {
-    const filename = getPlatFormFilename();
+    const filename = getPlatformFilename();
     const expected = config.shfmtChecksums[filename as keyof typeof config.shfmtChecksums];
     if (!expected) {
       throw new Error(`unknown shfmt filename: ${filename}`);
@@ -49,76 +45,36 @@ export async function verifyShfmtChecksum(destPath: string): Promise<void> {
 
 const inFlightDownloads = new Map<string, Promise<void>>();
 
-export function download2(
-  srcUrl: string,
-  destPath: string,
-  progress?: (downloaded: number, contentLength?: number, prev_downloaded?: number) => void
-) {
+export function download2(srcUrl: string, destPath: string) {
   const pending =
     inFlightDownloads.get(destPath) ??
-    runDownload(srcUrl, destPath, progress).finally(() => inFlightDownloads.delete(destPath));
+    runDownload(srcUrl, destPath).finally(() => inFlightDownloads.delete(destPath));
   inFlightDownloads.set(destPath, pending);
   return pending;
 }
 
-function runDownload(
-  srcUrl: string,
-  destPath: string,
-  progress?: (downloaded: number, contentLength?: number, prev_downloaded?: number) => void
-) {
-  return new Promise<void>(async (resolve, reject) => {
-    let response: IncomingMessage | undefined;
-    try {
-      for (let i = 0; i < MaxRedirects; ++i) {
-        srcUrl = allowedDownloadUrl(srcUrl);
-        response = await new Promise<IncomingMessage>((resolve) => https.get(srcUrl, resolve));
-        const redirectStatus = response.statusCode;
-        if (
-          redirectStatus !== undefined &&
-          redirectStatus >= 300 &&
-          redirectStatus < 400 &&
-          response.headers.location
-        ) {
-          srcUrl = new URL(response.headers.location, srcUrl).href;
-        } else {
-          break;
-        }
-      }
-    } catch (err) {
-      reject(err);
-      return;
+async function runDownload(srcUrl: string, destPath: string): Promise<void> {
+  let response: Response | undefined;
+  for (let i = 0; i < MaxRedirects; ++i) {
+    srcUrl = allowedDownloadUrl(srcUrl);
+    response = await fetch(srcUrl, { redirect: 'manual' });
+    const location = response.headers.get('location');
+    if (response.status >= 300 && response.status < 400 && location) {
+      srcUrl = new URL(location, srcUrl).href;
+    } else {
+      break;
     }
-    const statusCode = response?.statusCode;
-    if (!response || statusCode === undefined || statusCode < 200 || statusCode >= 300) {
-      reject(new Error(`HTTP status ${statusCode} : ${response?.statusMessage}`));
-      return;
-    }
-    if (response.headers['content-type'] != 'application/octet-stream') {
-      reject(new Error('HTTP response does not contain an octet stream'));
-      return;
-    }
-    const stm = fs.createWriteStream(destPath, { mode: 0o644 });
-    const pipeStm = response.pipe(stm);
-    if (progress) {
-      const contentLength = response.headers['content-length']
-        ? Number.parseInt(response.headers['content-length'])
-        : undefined;
-      let downloaded = 0;
-      let old_downloaded = 0;
-      response.on('data', (chunk) => {
-        old_downloaded = downloaded;
-        downloaded += chunk.length;
-        progress(downloaded, contentLength, old_downloaded);
-      });
-    }
-    pipeStm.on('finish', () => {
-      verifyShfmtChecksum(destPath)
-        .then(() => fs.promises.chmod(destPath, 0o755))
-        .then(() => resolve(undefined), reject);
-    });
-    pipeStm.on('error', reject);
-    response.on('error', reject);
-  });
+  }
+  if (!response || response.status < 200 || response.status >= 300) {
+    throw new Error(`HTTP status ${response?.status} : ${response?.statusText}`);
+  }
+  if (response.headers.get('content-type') != 'application/octet-stream') {
+    throw new Error('HTTP response does not contain an octet stream');
+  }
+  const body = Buffer.from(await response.arrayBuffer());
+  await fs.promises.writeFile(destPath, body, { mode: 0o644 });
+  await verifyShfmtChecksum(destPath);
+  await fs.promises.chmod(destPath, 0o755);
 }
 
 enum Arch {
@@ -157,7 +113,7 @@ export function getArchExtension(): Arch {
   }
 }
 
-function getExecuteableFileExt() {
+function getExecutableFileExt() {
   if (process.platform === 'win32') {
     return '.exe';
   } else {
@@ -182,49 +138,37 @@ export function getPlatform(): Platform {
   }
 }
 
-export function getPlatFormFilename() {
+export function getPlatformFilename() {
   const arch = getArchExtension();
   const platform = getPlatform();
   if (arch === Arch.unknown || platform == Platform.unknown) {
     throw new Error('do not find release shfmt for your platform');
   }
-  return `shfmt_${config.shfmtVersion}_${platform}_${arch}${getExecuteableFileExt()}`;
+  return `shfmt_${config.shfmtVersion}_${platform}_${arch}${getExecutableFileExt()}`;
 }
 
 export function getReleaseDownloadUrl() {
   // https://github.com/mvdan/sh/releases/download/v2.6.4/shfmt_v2.6.4_darwin_amd64
   return `https://github.com/mvdan/sh/releases/download/${
     config.shfmtVersion
-  }/${getPlatFormFilename()}`;
+  }/${getPlatformFilename()}`;
 }
 
 export function getDestPath(context: vscode.ExtensionContext): string {
-  return path.join(context.extensionPath, 'bin', getPlatFormFilename());
+  return path.join(context.extensionPath, 'bin', getPlatformFilename());
 }
 
-async function ensureDirectory(dir: string) {
-  let exists = await new Promise((resolve) => fs.exists(dir, (exists) => resolve(exists)));
-  if (!exists) {
-    await ensureDirectory(path.dirname(dir));
-    await new Promise((resolve, reject) =>
-      fs.mkdir(dir, (err) => {
-        if (err) {
-          reject(err);
-        } else {
-          resolve(true);
-        }
-      })
-    );
-  }
-}
-
-export async function checkInstall(context: vscode.ExtensionContext, output: vscode.OutputChannel) {
+export async function checkInstall(
+  context: vscode.ExtensionContext,
+  output: vscode.OutputChannel,
+  configPath: string | null
+) {
   if (!config.needCheckInstall) {
     return;
   }
   const destPath = getDestPath(context);
-  await ensureDirectory(path.dirname(destPath));
-  const needDownload = await checkNeedInstall(destPath, output);
+  await fs.promises.mkdir(path.dirname(destPath), { recursive: true });
+  const needDownload = await checkNeedInstall(destPath, output, configPath);
   if (needDownload) {
     output.show();
     try {
@@ -248,15 +192,7 @@ export async function checkInstall(context: vscode.ExtensionContext, output: vsc
       output.appendLine(`download shfmt page: https://github.com/mvdan/sh/releases`);
       output.appendLine(`You can't use this plugin until the download is successful.`);
       output.show();
-      await download2(url, destPath, (d, t, p) => {
-        if (t == null || p == null) {
-          output.append('.');
-        } else if (Math.floor(p / 5) < Math.floor(d / 5)) {
-          output.appendLine(`downloaded:[${((100.0 * d) / t).toFixed(2)}%]`);
-        } else {
-          output.append('.');
-        }
-      });
+      await download2(url, destPath);
       output.appendLine(`download success, You can use it successfully!`);
       output.appendLine('Start or issues can be submitted here https://git.io/shfmt');
     } catch (err) {
@@ -276,9 +212,12 @@ async function cleanFile(file: string) {
   await fs.promises.unlink(file);
 }
 
-async function checkNeedInstall(dest: string, output: vscode.OutputChannel): Promise<boolean> {
+async function checkNeedInstall(
+  dest: string,
+  output: vscode.OutputChannel,
+  configPath: string | null
+): Promise<boolean> {
   try {
-    const configPath = getSettings('path');
     if (configPath) {
       try {
         await fs.promises.access(configPath, fs.constants.X_OK);
@@ -286,7 +225,7 @@ async function checkNeedInstall(dest: string, output: vscode.OutputChannel): Pro
         return false;
       } catch (err) {
         output.appendLine(
-          `"${shellformatPath}": "${configPath}"   find config shellformat path ,but the file cannot execute or not exists, so will auto download shfmt`
+          `"shellformat.path": "${configPath}"   find config shellformat path ,but the file cannot execute or not exists, so will auto download shfmt`
         );
       }
     }

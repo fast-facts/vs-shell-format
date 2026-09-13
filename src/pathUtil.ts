@@ -15,5 +15,5 @@ export function substitutePath(filePath: string): string {
   return filePath
     .replace(/\${workspaceRoot}/g, workspaceFolder || '')
     .replace(/\${workspaceFolder}/g, workspaceFolder || '')
-    .replace(/\${env:([^=}]+)}/g, (sub: string, envName: string) => (process.env[envName] ?? ''));
+    .replace(/\${env:([^=}]+)}/g, (_sub: string, envName: string) => process.env[envName] ?? '');
 }

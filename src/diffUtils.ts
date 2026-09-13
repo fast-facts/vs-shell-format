@@ -1,6 +1,6 @@
 import { Position, Range, TextEdit } from 'vscode';
 
-import jsDiff = require('diff');
+import { structuredPatch, type StructuredPatch, type StructuredPatchHunk } from 'diff';
 
 export enum EditTypes {
   EDIT_DELETE,
@@ -40,15 +40,15 @@ export interface FilePatch {
   edits: Edit[];
 }
 
-function parseUniDiffs(diffOutput: jsDiff.StructuredPatch[]): FilePatch[] {
+function parseUniDiffs(diffOutput: StructuredPatch[]): FilePatch[] {
   let filePatches: FilePatch[] = [];
-  diffOutput.forEach((uniDiff: jsDiff.StructuredPatch) => {
+  diffOutput.forEach((uniDiff: StructuredPatch) => {
     let edit: Edit | null = null;
     let edits: Edit[] = [];
-    uniDiff.hunks.forEach((hunk: jsDiff.StructuredPatchHunk) => {
+    uniDiff.hunks.forEach((hunk: StructuredPatchHunk) => {
       let startLine = hunk.oldStart;
       hunk.lines.forEach((line) => {
-        switch (line.substr(0, 1)) {
+        switch (line.slice(0, 1)) {
           case '-':
             if (edit == null) {
               edit = new Edit(EditTypes.EDIT_DELETE, new Position(startLine - 1, 0));
@@ -62,7 +62,7 @@ function parseUniDiffs(diffOutput: jsDiff.StructuredPatch[]): FilePatch[] {
             } else if (edit.action === EditTypes.EDIT_DELETE) {
               edit.action = EditTypes.EDIT_REPLACE;
             }
-            edit.text += line.substr(1) + '\n';
+            edit.text += line.slice(1) + '\n';
             break;
           case ' ':
             startLine++;
@@ -88,7 +88,7 @@ export function getEdits(fileName: string, oldStr: string, newStr: string): File
     oldStr = oldStr.split('\r\n').join('\n');
     newStr = newStr.split('\r\n').join('\n');
   }
-  let unifiedDiffs: jsDiff.StructuredPatch = jsDiff.structuredPatch(
+  let unifiedDiffs: StructuredPatch = structuredPatch(
     fileName,
     fileName,
     oldStr,

@@ -5,25 +5,10 @@
   "version": "0.0.0-semantic-release",
   "publisher": "vs-shell-format",
   "engines": {
-    "vscode": "^1.36.0"
+    "vscode": "^1.101.0"
   },
   "categories": [
     "Formatters"
-  ],
-  "activationEvents": [
-    "onLanguage:shellscript",
-    "onLanguage:dotenv",
-    "onLanguage:dockerfile",
-    "onLanguage:ignore",
-    "onLanguage:hosts",
-    "onLanguage:jvmoptions",
-    "onLanguage:properties",
-    "onLanguage:spring-boot-properties",
-    "onLanguage:azcli",
-    "onLanguage:bats",
-    "onLanguage:zsh",
-    "onLanguage:mksh",
-    "onLanguage:dash"
   ],
   "main": "./dist/extension",
   "capabilities": {
@@ -274,7 +259,7 @@
   "devDependencies": {
     "@types/mocha": "10.0.10",
     "@types/node": "24.13.4",
-    "@types/vscode": "^1.137.0",
+    "@types/vscode": "1.101.0",
     "@vscode/test-electron": "^3.1.0",
     "@vscode/vsce": "^3.9.2",
     "glob": "^13.0.6",
