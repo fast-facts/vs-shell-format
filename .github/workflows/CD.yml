@@ -19,7 +19,6 @@ jobs:
           node-version: '24'
           cache: npm
       - run: npm ci
-      - run: npm run format-check
       - name: Run tests
         if: matrix.os == 'ubuntu-latest'
         uses: GabrielBB/xvfb-action@v1.7

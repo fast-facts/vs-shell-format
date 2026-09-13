@@ -4,7 +4,7 @@ import { fileExists, substitutePath } from './pathUtil';
 import { userOrDefaultSetting } from './userSettings';
 import { output } from './extension';
 
-import { getEdits } from '../src/diffUtils';
+import { getEdits } from './diffUtils';
 
 import {
   Diagnostic,

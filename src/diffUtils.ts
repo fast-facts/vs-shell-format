@@ -20,7 +20,6 @@ export class Edit {
     this.text = '';
   }
 
-  // Creates TextEdit for current Edit
   apply(): TextEdit {
     switch (this.action) {
       case EditTypes.EDIT_INSERT:
@@ -40,19 +39,12 @@ export interface FilePatch {
   edits: Edit[];
 }
 
-/**
- * Uses diff module to parse given array of IUniDiff objects and returns edits for files
- *
- * @param diffOutput jsDiff.IUniDiff[]
- *
- * @returns Array of FilePatch objects, one for each file
- */
-function parseUniDiffs(diffOutput: jsDiff.IUniDiff[]): FilePatch[] {
+function parseUniDiffs(diffOutput: jsDiff.ParsedDiff[]): FilePatch[] {
   let filePatches: FilePatch[] = [];
-  diffOutput.forEach((uniDiff: jsDiff.IUniDiff) => {
+  diffOutput.forEach((uniDiff: jsDiff.ParsedDiff) => {
     let edit: Edit = null;
     let edits: Edit[] = [];
-    uniDiff.hunks.forEach((hunk: jsDiff.IHunk) => {
+    uniDiff.hunks.forEach((hunk: jsDiff.Hunk) => {
       let startLine = hunk.oldStart;
       hunk.lines.forEach((line) => {
         switch (line.substr(0, 1)) {
@@ -84,27 +76,18 @@ function parseUniDiffs(diffOutput: jsDiff.IUniDiff[]): FilePatch[] {
         edits.push(edit);
       }
     });
-    filePatches.push({ fileName: uniDiff.oldFileName, edits: edits });
+    filePatches.push({ fileName: uniDiff.oldFileName ?? '', edits: edits });
   });
 
   return filePatches;
 }
 
-/**
- * Returns a FilePatch object by generating diffs between given oldStr and newStr using the diff module
- *
- * @param fileName string: Name of the file to which edits should be applied
- * @param oldStr string
- * @param newStr string
- *
- * @returns A single FilePatch object
- */
 export function getEdits(fileName: string, oldStr: string, newStr: string): FilePatch {
   if (process.platform === 'win32') {
     oldStr = oldStr.split('\r\n').join('\n');
     newStr = newStr.split('\r\n').join('\n');
   }
-  let unifiedDiffs: jsDiff.IUniDiff = jsDiff.structuredPatch(
+  let unifiedDiffs: jsDiff.ParsedDiff = jsDiff.structuredPatch(
     fileName,
     fileName,
     oldStr,
