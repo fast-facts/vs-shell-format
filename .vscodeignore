@@ -7,11 +7,9 @@
 .vscode-test/**
 bin/
 image/**
-node_modules/
-out/**
+out/test/**
 package-lock.json
 src/**
 test/**
 tsconfig.json
 typings/
-webpack.config.js

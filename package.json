@@ -23,7 +23,7 @@
     "onLanguage:bats",
     "onLanguage:zsh"
   ],
-  "main": "./dist/extension",
+  "main": "./out/src/extension",
   "capabilities": {
     "documentFormattingProvider": "true",
     "untrustedWorkspaces": {
@@ -207,12 +207,11 @@
     }
   },
   "scripts": {
-    "vscode:prepublish": "webpack --mode production",
+    "vscode:prepublish": "npm run compile",
     "package": "vsce package",
-    "compile": "webpack --mode none",
-    "watch": "webpack --mode none --watch",
-    "test-compile": "tsc -p ./",
-    "pretest": "npm run compile && npm run test-compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -p ./ --watch",
+    "pretest": "npm run compile",
     "test": "node ./out/test/runTest.js"
   },
   "release": {
@@ -239,12 +238,8 @@
     "@types/vscode": "^1.36.0",
     "@vscode/test-electron": "^3.1.0",
     "@vscode/vsce": "^3.9.2",
-    "copy-webpack-plugin": "^14.0.0",
     "mocha": "10.8.2",
-    "ts-loader": "9.5.4",
-    "typescript": "5.9.3",
-    "webpack": "5.102.1",
-    "webpack-cli": "5.1.4"
+    "typescript": "5.9.3"
   },
   "dependencies": {
     "diff": "~5.2.2",
