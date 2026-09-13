@@ -11,7 +11,6 @@ const DEFAULT_LANGUAGES = [
   'hosts',
   'jvmoptions',
   'ignore',
-  'gitignore',
   'properties',
   'spring-boot-properties',
   'azcli',
