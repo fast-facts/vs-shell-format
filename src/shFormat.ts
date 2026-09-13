@@ -22,6 +22,7 @@ import * as editorconfig from 'editorconfig';
 
 import { config } from './config';
 import { getPlatFormFilename, getDestPath } from './downloader';
+import { prepareShfmt } from './shfmtFlags';
 export const configurationPrefix = 'shellformat';
 
 export enum ConfigItemName {
@@ -80,100 +81,48 @@ export class Formatter {
         let settings = vscode.workspace.getConfiguration(configurationPrefix);
         let binPath: string = getSettings('path');
         let flag: string = getSettings('flag');
-
-        let shfmtFlags = []; // TODO: Add user configuration
-        let shfmtIndent = false;
-        if (/\.bats$/.test(document.fileName)) {
-          shfmtFlags.push('--ln=bats');
-        }
-        if (/\.(zsh|zshrc|zshenv|zprofile|zlogin|zlogout)$/.test(document.fileName)) {
-          shfmtFlags.push('--ln=zsh');
-        }
-
-        if (binPath) {
-          if (fileExists(binPath)) {
-            Formatter.formatCommand = binPath;
-          } else {
-            let errMsg = `Invalid shfmt path in extension configuration: ${binPath}`;
-            vscode.window.showErrorMessage(errMsg);
-            reject(errMsg);
-            return;
-          }
-        } else {
-          Formatter.formatCommand = this.getShfmtPath();
-        }
-
-        if (settings.useEditorConfig) {
+        const useEditorConfig = Boolean(settings.useEditorConfig);
+        const edcfgOptions = useEditorConfig ? editorconfig.parseSync(document.fileName) : {};
+        if (useEditorConfig) {
           if (flag) {
-            flag = '';
             output.appendLine('shfmt flags will be ignored as EditorConfig mode is enabled.');
           }
-
-          let edcfgOptions = editorconfig.parseSync(document.fileName);
           output.appendLine(
             `EditorConfig for file "${document.fileName}": ${JSON.stringify(edcfgOptions)}`
           );
-
-          if (edcfgOptions.indent_style === 'tab') {
-            shfmtFlags.push('-i=0');
-            shfmtIndent = true;
-          } else if (edcfgOptions.indent_style === 'space') {
-            if (typeof edcfgOptions.indent_size === 'number') {
-              shfmtFlags.push(`-i=${edcfgOptions.indent_size}`);
-              shfmtIndent = true;
-            }
-          }
-
-          if (edcfgOptions['shell_variant']) {
-            shfmtFlags.push(`-ln=${edcfgOptions['shell_variant']}`);
-          }
-
-          if (edcfgOptions['binary_next_line']) {
-            shfmtFlags.push('-bn');
-          }
-
-          if (edcfgOptions['switch_case_indent']) {
-            shfmtFlags.push('-ci');
-          }
-
-          if (edcfgOptions['space_redirects']) {
-            shfmtFlags.push('-sr');
-          }
-
-          if (edcfgOptions['keep_padding']) {
-            shfmtFlags.push('-kp');
-          }
-
-          if (edcfgOptions['function_next_line']) {
-            shfmtFlags.push('-fn');
-          }
         }
 
-        if (flag) {
-          if (flag.includes('-w')) {
-            let errMsg = 'Incompatible flag specified in shellformat.flag: -w';
-            vscode.window.showWarningMessage(errMsg);
-            reject(errMsg);
+        const prep = prepareShfmt({
+          fileName: document.fileName,
+          binPath,
+          flag,
+          useEditorConfig,
+          editorConfig: edcfgOptions,
+          defaultCommand: this.getShfmtPath(),
+          pathExists: binPath ? fileExists(binPath) : true,
+          options,
+        });
+        switch (prep.kind) {
+          case 'invalid-path':
+            vscode.window.showErrorMessage(prep.message);
+            reject(prep.message);
             return;
+          case 'write-flag':
+            vscode.window.showWarningMessage(prep.message);
+            reject(prep.message);
+            return;
+          case 'run':
+            break;
+          default: {
+            const unused: never = prep;
+            return unused;
           }
-
-          if (flag.includes('-i')) {
-            shfmtIndent = true;
-          }
-
-          let flags = flag.split(' ');
-          shfmtFlags.push(...flags);
         }
 
-        if (options?.insertSpaces && !shfmtIndent) {
-          shfmtFlags.push(`-i=${options.tabSize}`);
-        }
+        Formatter.formatCommand = prep.command;
+        output.appendLine(`Effective shfmt flags: ${prep.flags}`);
 
-        if (shfmtFlags) {
-          output.appendLine(`Effective shfmt flags: ${shfmtFlags}`);
-        }
-
-        let shfmt = child_process.spawn(Formatter.formatCommand, shfmtFlags);
+        let shfmt = child_process.spawn(prep.command, prep.flags);
 
         let shfmtOut: Buffer[] = [];
         shfmt.stdout.on('data', (chunk) => {
@@ -272,10 +221,6 @@ export class ShellDocumentFormattingEditProvider implements vscode.DocumentForma
     options: vscode.FormattingOptions,
     token: vscode.CancellationToken
   ): Thenable<vscode.TextEdit[]> {
-    // const onSave = this.settings["onsave"];
-    // if (!onSave) {
-    //   console.log(onSave);
-    // }
     return this.formatter.formatDocument(document, options);
   }
 }
