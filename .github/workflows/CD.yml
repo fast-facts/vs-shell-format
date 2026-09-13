@@ -1,12 +1,9 @@
 name: CD
 
 on:
-  push:
-    branches:
-      - master
-  pull_request:
-    branches:
-      - master
+  schedule:
+    - cron: '0 9 * * *'
+  workflow_dispatch:
 
 jobs:
   unit-test:
