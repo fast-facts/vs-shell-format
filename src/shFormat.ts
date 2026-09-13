@@ -56,8 +56,8 @@ export class Formatter {
     return new Promise((resolve, reject) => {
       try {
         let settings = vscode.workspace.getConfiguration(configurationPrefix);
-        let binPath: string = getSettings('path');
-        let flag: string = getSettings('flag');
+        let binPath: string | null = getSettings('path');
+        let flag: string | null = getSettings('flag');
         const useEditorConfig = Boolean(settings.useEditorConfig);
         const edcfgOptions = useEditorConfig ? editorconfig.parseSync(document.fileName) : {};
         if (useEditorConfig) {
@@ -122,7 +122,7 @@ export class Formatter {
         });
 
         let textEdits: TextEdit[] = [];
-        shfmt.on('close', (code, signal) => {
+        shfmt.on('close', (code) => {
           if (code == 0) {
             this.diagnosticCollection.delete(document.uri);
 
@@ -136,7 +136,7 @@ export class Formatter {
 
               resolve(textEdits);
             } else {
-              resolve(null);
+              resolve([]);
             }
           } else {
             let errMsg = '';
@@ -184,7 +184,7 @@ export class ShellDocumentFormattingEditProvider implements vscode.DocumentForma
   public provideDocumentFormattingEdits(
     document: vscode.TextDocument,
     options: vscode.FormattingOptions,
-    token: vscode.CancellationToken
+    _token: vscode.CancellationToken
   ): Thenable<vscode.TextEdit[]> {
     return this.formatter.formatDocument(document, options);
   }
