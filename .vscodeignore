@@ -13,4 +13,3 @@ src/**
 test/**
 tsconfig.json
 tsconfig.test.json
-typings/
