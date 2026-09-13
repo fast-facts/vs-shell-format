@@ -37,10 +37,10 @@
   "icon": "logo.png",
   "repository": {
     "type": "git",
-    "url": "https://github.com/lumirelle/vs-shell-format.git"
+    "url": "https://github.com/fast-facts/vs-shell-format.git"
   },
   "bugs": {
-    "url": "https://github.com/lumirelle/vs-shell-format/issues"
+    "url": "https://github.com/fast-facts/vs-shell-format/issues"
   },
   "keywords": [
     "shell",

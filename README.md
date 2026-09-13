@@ -4,8 +4,7 @@
 <a href="https://marketplace.visualstudio.com/items?itemName=vs-shell-format.shell-format-secure" target="__blank"><img src="https://img.shields.io/visual-studio-marketplace/d/vs-shell-format.shell-format-secure?style=flat-square&label=Downloads" /></a>
 <a href="https://marketplace.visualstudio.com/items?itemName=vs-shell-format.shell-format-secure" target="__blank"><img src="https://img.shields.io/visual-studio-marketplace/i/vs-shell-format.shell-format-secure?style=flat-square&label=Installs" /></a>
 <a href="https://marketplace.visualstudio.com/items?itemName=vs-shell-format.shell-format-secure" target="__blank"><img src="https://img.shields.io/visual-studio-marketplace/stars/vs-shell-format.shell-format-secure?style=flat-square&label=Rating" /></a>
-<a href="https://github.com/lumirelle/vs-shell-format" target="__blank"><img src="https://github.com/lumirelle/vs-shell-format/actions/workflows/CI.yml/badge.svg" /></a>
-<a href="https://github.com/lumirelle/vs-shell-format" target="__blank"><img src="https://github.com/lumirelle/vs-shell-format/actions/workflows/CD.yml/badge.svg" /></a>
+<a href="https://github.com/fast-facts/vs-shell-format" target="__blank"><img src="https://github.com/fast-facts/vs-shell-format/actions/workflows/CI.yml/badge.svg" /></a>
 
 <!-- <a href="https://kermanx.github.io/reactive-vscode/" target="__blank"><img src="https://img.shields.io/badge/made_with-reactive--vscode-%23007ACC?style=flat&labelColor=%23229863"  alt="Made with reactive-vscode" /></a> -->
 
@@ -15,7 +14,7 @@
 >
 > Since the original package no longer maintained, I just try to fork this package, fix this issue and re-publish new package to marketplace.
 >
-> See https://github.com/foxundermoon/vs-shell-format/issues/396.
+> See <https://github.com/foxundermoon/vs-shell-format/issues/396>.
 
 [Get it on the VS Code Marketplace!](https://marketplace.visualstudio.com/items?itemName=vs-shell-format.shell-format-secure)
 
@@ -38,7 +37,7 @@
 > binary_next_line = true
 > ```
 >
-> See [#14](https://github.com/lumirelle/vs-shell-format/issues/14) for background.
+> See [#14](https://github.com/fast-facts/vs-shell-format/issues/14) for background.
 
 | language    | extension                | describe              |
 | ----------- | ------------------------ | --------------------- |
@@ -53,7 +52,7 @@
 
 ---
 
-![screenshot](https://github.com/lumirelle/vs-shell-format/raw/master/image/shell_format.gif)
+![screenshot](https://github.com/fast-facts/vs-shell-format/raw/master/image/shell_format.gif)
 
 ## Usage
 
@@ -74,7 +73,7 @@
 
 ## Links
 
-### [Source code](https://github.com/lumirelle/vs-shell-format)
+### [Source code](https://github.com/fast-facts/vs-shell-format)
 
 ### [shfmt (mvdan/sh)](https://github.com/mvdan/sh)
 
@@ -107,11 +106,3 @@ Support this project with your organization. Your logo will show up here with a 
 <a href="https://opencollective.com/vsformat/organization/7/website"><img src="https://opencollective.com/vsformat/organization/7/avatar.svg"></a>
 <a href="https://opencollective.com/vsformat/organization/8/website"><img src="https://opencollective.com/vsformat/organization/8/avatar.svg"></a>
 <a href="https://opencollective.com/vsformat/organization/9/website"><img src="https://opencollective.com/vsformat/organization/9/avatar.svg"></a>
-
-## Sponsors
-
-<p align="center">
-  <a href="https://cdn.jsdelivr.net/gh/lumirelle/static/sponsors.png">
-    <img src='https://cdn.jsdelivr.net/gh/lumirelle/static/sponsors.png'/>
-  </a>
-</p>
