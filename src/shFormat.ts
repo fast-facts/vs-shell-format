@@ -96,6 +96,7 @@ export class Formatter {
             let errMsg = `Invalid shfmt path in extension configuration: ${binPath}`;
             vscode.window.showErrorMessage(errMsg);
             reject(errMsg);
+            return;
           }
         } else {
           Formatter.formatCommand = this.getShfmtPath();
@@ -152,6 +153,7 @@ export class Formatter {
             let errMsg = 'Incompatible flag specified in shellformat.flag: -w';
             vscode.window.showWarningMessage(errMsg);
             reject(errMsg);
+            return;
           }
 
           if (flag.includes('-i')) {
