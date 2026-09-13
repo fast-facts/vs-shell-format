@@ -79,7 +79,13 @@
           ".bash_login",
           ".profile",
           ".bash_logout",
-          ".bash_aliases"
+          ".bash_aliases",
+          "PKGBUILD",
+          "APKBUILD"
+        ],
+        "filenamePatterns": [
+          "*.ebuild",
+          "*.eclass"
         ]
       },
       {

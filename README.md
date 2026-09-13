@@ -35,7 +35,7 @@
 
 | language    | extension                                      | description            |
 | ----------- | ---------------------------------------------- | ---------------------- |
-| shellscript | .sh .bash                                      | shell script files     |
+| shellscript | .sh .bash, bash dotfiles, PKGBUILD, APKBUILD, *.ebuild, *.eclass | shell script files     |
 | dockerfile  | Dockerfile, Dockerfile.*, \*.dockerfile        | dockerfile (opt-in)    |
 | dotenv      | .env .env.* env                                | dotenv files           |
 | ignore      | .gitignore .dockerignore                       | ignore files           |
