@@ -10,11 +10,13 @@ import {
   verifyShfmtChecksum,
 } from '../../src/downloader';
 import * as fs from 'fs';
+import * as https from 'https';
 import * as path from 'path';
 import { config } from '../../src/config';
 
 const originalPlatform = Object.getOwnPropertyDescriptor(process, 'platform');
 const originalArch = Object.getOwnPropertyDescriptor(process, 'arch');
+const originalHttpsGet = https.get;
 
 function setProcess(platform: string, arch: string) {
   Object.defineProperty(process, 'platform', { value: platform, configurable: true });
@@ -30,8 +32,31 @@ function restoreProcess() {
   }
 }
 
+function fakeHttpsGet(
+  handler: (url: string) => { statusCode: number; headers?: Record<string, string> }
+) {
+  Object.defineProperty(https, 'get', {
+    configurable: true,
+    writable: true,
+    value: (
+      url: string,
+      cb: (res: { statusCode: number; headers: Record<string, string> }) => void
+    ) => {
+      const reply = handler(url);
+      cb({ statusCode: reply.statusCode, headers: reply.headers || {} });
+    },
+  });
+}
+
 suite('Downloader Tests', () => {
-  teardown(restoreProcess);
+  teardown(() => {
+    Object.defineProperty(https, 'get', {
+      value: originalHttpsGet,
+      configurable: true,
+      writable: true,
+    });
+    restoreProcess();
+  });
 
   test('linux x64 name uses config.shfmtVersion', () => {
     setProcess('linux', 'x64');
@@ -92,5 +117,39 @@ suite('Downloader Tests', () => {
     await fs.promises.writeFile(dest, 'not-shfmt');
     await assert.rejects(verifyShfmtChecksum(dest));
     await assert.rejects(fs.promises.access(dest));
+  });
+
+  test('follows redirects', async () => {
+    const seen: string[] = [];
+    fakeHttpsGet((url) => {
+      seen.push(url);
+      return seen.length === 1
+        ? { statusCode: 302, headers: { location: 'https://objects.githubusercontent.com/shfmt' } }
+        : { statusCode: 404 };
+    });
+    await assert.rejects(
+      download2('https://github.com/mvdan/sh/x', `${__dirname}/../redirect`),
+      /HTTP status 404/
+    );
+    assert.deepStrictEqual(seen, [
+      'https://github.com/mvdan/sh/x',
+      'https://objects.githubusercontent.com/shfmt',
+    ]);
+  });
+
+  test('rejects bad HTTP status', async () => {
+    fakeHttpsGet(() => ({ statusCode: 403 }));
+    await assert.rejects(
+      download2('https://github.com/mvdan/sh/x', `${__dirname}/../bad-status`),
+      /HTTP status 403/
+    );
+  });
+
+  test('rejects content-type that is not application/octet-stream', async () => {
+    fakeHttpsGet(() => ({ statusCode: 200, headers: { 'content-type': 'text/html' } }));
+    await assert.rejects(
+      download2('https://github.com/mvdan/sh/x', `${__dirname}/../bad-type`),
+      /octet stream/
+    );
   });
 });
