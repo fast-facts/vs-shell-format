@@ -37,6 +37,12 @@ export function prepareShfmt(input: PrepareShfmtInput): PrepareShfmtResult {
   if (/\.(zsh|zshrc|zshenv|zprofile|zlogin|zlogout)$/.test(input.fileName)) {
     flags.push('--ln=zsh');
   }
+  if (/\.mksh$|\.mkshrc$/.test(input.fileName)) {
+    flags.push('--ln=mksh');
+  }
+  if (/\.dash$/.test(input.fileName)) {
+    flags.push('--ln=posix');
+  }
 
   if (input.binPath && !input.pathExists) {
     return {

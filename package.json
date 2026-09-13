@@ -21,7 +21,9 @@
     "onLanguage:spring-boot-properties",
     "onLanguage:azcli",
     "onLanguage:bats",
-    "onLanguage:zsh"
+    "onLanguage:zsh",
+    "onLanguage:mksh",
+    "onLanguage:dash"
   ],
   "main": "./dist/extension",
   "capabilities": {
@@ -58,6 +60,8 @@
     "vmoptions",
     "bashrc",
     "zshrc",
+    "mksh",
+    "dash",
     "azcli",
     "azure cli tool",
     "bats"
@@ -65,7 +69,18 @@
   "contributes": {
     "languages": [
       {
-        "id": "shellscript"
+        "id": "shellscript",
+        "extensions": [
+          ".bash"
+        ],
+        "filenames": [
+          ".bashrc",
+          ".bash_profile",
+          ".bash_login",
+          ".profile",
+          ".bash_logout",
+          ".bash_aliases"
+        ]
       },
       {
         "id": "dockerfile",
@@ -155,6 +170,21 @@
           ".zlogin",
           ".zlogout"
         ]
+      },
+      {
+        "id": "mksh",
+        "extensions": [
+          ".mksh"
+        ],
+        "filenames": [
+          ".mkshrc"
+        ]
+      },
+      {
+        "id": "dash",
+        "extensions": [
+          ".dash"
+        ]
       }
     ],
     "configuration": {
@@ -193,7 +223,9 @@
             "spring-boot-properties",
             "azcli",
             "bats",
-            "zsh"
+            "zsh",
+            "mksh",
+            "dash"
           ],
           "description": "the trigger effect  on the language"
         },

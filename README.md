@@ -45,6 +45,8 @@
 | azcli       | .azcli                                         | Azure CLI script files |
 | bats        | .bats                                          | Bats test file         |
 | zsh         | .zsh .zshrc .zshenv .zprofile .zlogin .zlogout | zsh script files       |
+| mksh        | .mksh .mkshrc                                  | mksh script files      |
+| dash        | .dash                                          | dash / posix shell     |
 
 ---
 
