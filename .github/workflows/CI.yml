@@ -18,6 +18,13 @@ jobs:
           node-version: '24'
           cache: npm
       - run: npm ci
+      - uses: actions/cache@v4
+        with:
+          path: |
+            .vscode-test
+            bin
+          key: ${{ runner.os }}-vscode-shfmt-${{ hashFiles('package-lock.json', 'src/config.ts') }}
+          restore-keys: ${{ runner.os }}-vscode-shfmt-
       - name: Run tests
         if: matrix.os == 'ubuntu-latest'
         uses: GabrielBB/xvfb-action@v1.7
