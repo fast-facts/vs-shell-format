@@ -107,6 +107,23 @@ suite('Downloader Tests', () => {
     );
   });
 
+  test('one dest shares one download', async () => {
+    let n = 0;
+    fakeHttpsGet(() => {
+      n += 1;
+      return { statusCode: 404 };
+    });
+    const dest = `${__dirname}/../shared-dest`;
+    const url = 'https://github.com/mvdan/sh/x';
+    await Promise.all([
+      assert.rejects(download2(url, dest), /HTTP status 404/),
+      assert.rejects(download2(url, dest), /HTTP status 404/),
+    ]);
+    assert.strictEqual(n, 1);
+    await assert.rejects(download2(url, dest), /HTTP status 404/);
+    assert.strictEqual(n, 2);
+  });
+
   test('rejects blocked download urls', async () => {
     await assert.rejects(download2('http://github.com/x', `${__dirname}/../blocked-http`));
     await assert.rejects(download2('https://evil.example/x', `${__dirname}/../blocked-host`));

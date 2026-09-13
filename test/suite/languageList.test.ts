@@ -2,9 +2,7 @@ import * as assert from 'assert';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as vscode from 'vscode';
-import { download2, getPlatFormFilename, getReleaseDownloadUrl } from '../../src/downloader';
 import { activate } from '../../src/extension';
-import { fileExists } from '../../src/pathUtil';
 
 const EXTENSION_ID = 'vs-shell-format.shell-format-secure';
 const DEFAULT_LANGUAGES = [
@@ -38,11 +36,6 @@ suite('Language list contract', function () {
     this.timeout(60000);
     const ext = vscode.extensions.getExtension(EXTENSION_ID);
     assert.ok(ext, `extension ${EXTENSION_ID} is not present`);
-    const dest = path.join(ext.extensionPath, 'bin', getPlatFormFilename());
-    if (!fileExists(dest)) {
-      await fs.promises.mkdir(path.dirname(dest), { recursive: true });
-      await download2(getReleaseDownloadUrl(), dest);
-    }
     await ext.activate();
     root = ext.extensionPath;
   });
@@ -75,7 +68,7 @@ suite('Language list contract', function () {
       vscode.ConfigurationTarget.Global
     );
     try {
-      activate({ subscriptions, extensionPath: root } as vscode.ExtensionContext);
+      await activate({ subscriptions, extensionPath: root } as vscode.ExtensionContext);
       assert.notStrictEqual(await formatEdits('dockerfile'), undefined);
     } finally {
       for (const d of subscriptions) {

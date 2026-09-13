@@ -19,11 +19,11 @@ const formatDocumentCommand = 'editor.action.formatDocument';
 export const shellformatPath = 'shellformat.path';
 
 export const output = vscode.window.createOutputChannel('shellformat');
-export function activate(context: vscode.ExtensionContext) {
+export async function activate(context: vscode.ExtensionContext) {
   const settings = vscode.workspace.getConfiguration(configurationPrefix);
   const shfmter = new Formatter(context, output);
   const shFmtProvider = new ShellDocumentFormattingEditProvider(shfmter, settings);
-  checkInstall(context, output);
+  await checkInstall(context, output);
   const effectLanguages = settings.get<string[]>(ConfigItemName.EffectLanguages);
   if (effectLanguages) {
     for (const lang of effectLanguages) {
