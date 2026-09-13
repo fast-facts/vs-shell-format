@@ -64,12 +64,26 @@ export async function verifyShfmtChecksum(destPath: string): Promise<void> {
   }
 }
 
-export async function download2(
+const inFlightDownloads = new Map<string, Promise<void>>();
+
+export function download2(
   srcUrl: string,
   destPath: string,
   progress?: (downloaded: number, contentLength?: number, prev_downloaded?: number) => void
 ) {
-  return new Promise(async (resolve, reject) => {
+  const pending =
+    inFlightDownloads.get(destPath) ??
+    runDownload(srcUrl, destPath, progress).finally(() => inFlightDownloads.delete(destPath));
+  inFlightDownloads.set(destPath, pending);
+  return pending;
+}
+
+function runDownload(
+  srcUrl: string,
+  destPath: string,
+  progress?: (downloaded: number, contentLength?: number, prev_downloaded?: number) => void
+) {
+  return new Promise<void>(async (resolve, reject) => {
     let response;
     try {
       for (let i = 0; i < MaxRedirects; ++i) {

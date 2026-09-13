@@ -1,9 +1,5 @@
 import * as assert from 'assert';
-import * as fs from 'fs';
-import * as path from 'path';
 import * as vscode from 'vscode';
-import { download2, getPlatFormFilename, getReleaseDownloadUrl } from '../../src/downloader';
-import { fileExists } from '../../src/pathUtil';
 import { Formatter } from '../../src/shFormat';
 
 const EXTENSION_ID = 'vs-shell-format.shell-format-secure';
@@ -17,11 +13,6 @@ suite('shfmt parse errors become diagnostics', function () {
     this.timeout(60000);
     const ext = vscode.extensions.getExtension(EXTENSION_ID);
     assert.ok(ext, `extension ${EXTENSION_ID} is not present`);
-    const dest = path.join(ext.extensionPath, 'bin', getPlatFormFilename());
-    if (!fileExists(dest)) {
-      await fs.promises.mkdir(path.dirname(dest), { recursive: true });
-      await download2(getReleaseDownloadUrl(), dest);
-    }
     await ext.activate();
     formatter = new Formatter(
       { extensionPath: ext.extensionPath } as vscode.ExtensionContext,
