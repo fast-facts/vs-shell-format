@@ -1,0 +1,59 @@
+name: Update shfmt
+
+on:
+  schedule:
+    - cron: '0 6 * * *'
+  workflow_dispatch:
+
+jobs:
+  update-shfmt:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Update to latest mvdan/sh release
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+        run: |
+          set -euo pipefail
+          LATEST=$(gh api repos/mvdan/sh/releases/latest --jq .tag_name)
+          CURRENT=$(grep -oP "shfmtVersion: '\Kv[^']+" src/config.ts | head -n 1)
+          echo "current: $CURRENT latest: $LATEST"
+          if [ "$LATEST" = "$CURRENT" ]; then
+            echo "shfmt already up to date ($CURRENT)"
+            exit 0
+          fi
+          ASSETS=$(gh api repos/mvdan/sh/releases/latest --jq '.assets[] | select(.name | startswith("shfmt_")) | "    '\''\(.name)'\'': '\''\(.digest | ltrimstr("sha256:"))'\''," ' | sort)
+          cat > src/config.ts <<EOF
+          export const config = {
+            shfmtVersion: '$LATEST',
+            needCheckInstall: true,
+            shfmtChecksums: {
+          $ASSETS
+            } as const,
+          };
+          EOF
+          git diff -- src/config.ts
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          BRANCH="auto/update-shfmt-$LATEST"
+          git checkout -B "$BRANCH"
+          git add src/config.ts
+          CUR_MAJOR=${CURRENT#v}; CUR_MAJOR=${CUR_MAJOR%%.*}
+          NEW_MAJOR=${LATEST#v}; NEW_MAJOR=${NEW_MAJOR%%.*}
+          CUR_MINOR=${CURRENT#v}; CUR_MINOR=${CUR_MINOR#*.}; CUR_MINOR=${CUR_MINOR%%.*}
+          NEW_MINOR=${LATEST#v}; NEW_MINOR=${NEW_MINOR#*.}; NEW_MINOR=${NEW_MINOR%%.*}
+          if [ "$NEW_MAJOR" != "$CUR_MAJOR" ]; then PREFIX="feat!"; else
+            if [ "$NEW_MINOR" != "$CUR_MINOR" ]; then PREFIX="feat"; else PREFIX="fix"; fi
+          fi
+          MSG="$PREFIX: update shfmt to $LATEST"
+          git commit -m "$MSG"
+          git push -u origin "$BRANCH"
+          if [ "$(gh pr list --head "$BRANCH" --json number --jq length)" -gt 0 ]; then
+            echo "PR already exists for $BRANCH"
+            exit 0
+          fi
+          gh pr create --base master --head "$BRANCH" --title "$MSG" --body "Automated shfmt update to $LATEST from mvdan/sh."
