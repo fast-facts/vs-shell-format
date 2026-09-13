@@ -20,7 +20,6 @@ export class Edit {
     this.text = '';
   }
 
-  // Creates TextEdit for current Edit
   apply(): TextEdit {
     switch (this.action) {
       case EditTypes.EDIT_INSERT:
@@ -40,13 +39,6 @@ export interface FilePatch {
   edits: Edit[];
 }
 
-/**
- * Uses diff module to parse given array of IUniDiff objects and returns edits for files
- *
- * @param diffOutput jsDiff.ParsedDiff[]
- *
- * @returns Array of FilePatch objects, one for each file
- */
 function parseUniDiffs(diffOutput: jsDiff.ParsedDiff[]): FilePatch[] {
   let filePatches: FilePatch[] = [];
   diffOutput.forEach((uniDiff: jsDiff.ParsedDiff) => {
@@ -90,15 +82,6 @@ function parseUniDiffs(diffOutput: jsDiff.ParsedDiff[]): FilePatch[] {
   return filePatches;
 }
 
-/**
- * Returns a FilePatch object by generating diffs between given oldStr and newStr using the diff module
- *
- * @param fileName string: Name of the file to which edits should be applied
- * @param oldStr string
- * @param newStr string
- *
- * @returns A single FilePatch object
- */
 export function getEdits(fileName: string, oldStr: string, newStr: string): FilePatch {
   if (process.platform === 'win32') {
     oldStr = oldStr.split('\r\n').join('\n');
