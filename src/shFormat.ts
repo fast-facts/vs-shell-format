@@ -25,7 +25,6 @@ export enum ConfigItemName {
   Flag = 'flag',
   Path = 'path',
   EffectLanguages = 'effectLanguages',
-  UseEditorConfig = 'useEditorConfig',
 }
 
 export class Formatter {
@@ -192,14 +191,11 @@ export class ShellDocumentFormattingEditProvider implements vscode.DocumentForma
   }
 }
 
-export function getSettings(key: string) {
+export function getSettings(key: 'path' | 'flag') {
   const settings = vscode.workspace.getConfiguration(configurationPrefix);
-  if (key === ConfigItemName.Path || key === ConfigItemName.Flag) {
-    const picked = userOrDefaultSetting(settings.inspect<string | null>(key));
-    if (key === ConfigItemName.Path && picked) {
-      return substitutePath(picked);
-    }
-    return picked ?? null;
+  const picked = userOrDefaultSetting(settings.inspect<string | null>(key));
+  if (key === ConfigItemName.Path && picked) {
+    return substitutePath(picked);
   }
-  return key !== undefined ? settings[key] : null;
+  return picked ?? null;
 }
