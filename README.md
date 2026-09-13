@@ -16,27 +16,10 @@
 
 ## Supported file types or languages
 
-> [!Note]
->
-> `Dockerfile` support is **opt-in**. It is registered as a language but excluded from the default `shellformat.effectLanguages`, so it won't format on save unless you enable it.
->
-> The upstream tool [`shfmt`](https://github.com/mvdan/sh) does not officially support Dockerfile. However, the common `Dockerfile` syntax (e.g. `RUN` with shell commands) falls within the shell grammar, in this case, `shfmt` can format `Dockerfile`. Because this is not an officially supported path and may mangle complex multiline constructs, it is disabled by default — enable it only if it works for your use case.
->
-> To enable, add `dockerfile` to `shellformat.effectLanguages`, or enable `shellformat.useEditorConfig` and add the following to your `.editorconfig`:
->
-> ```ini
-> [Dockerfile]
-> indent_size = 4
-> indent_style = space
-> binary_next_line = true
-> ```
->
-> See [#14](https://github.com/fast-facts/vs-shell-format/issues/14) for background.
-
 | language    | extension                                                        | description            |
 | ----------- | ---------------------------------------------------------------- | ---------------------- |
 | shellscript | .sh .bash, bash dotfiles, PKGBUILD, APKBUILD, *.ebuild, *.eclass | shell script files     |
-| dockerfile  | Dockerfile, Dockerfile.*, \*.dockerfile                          | dockerfile (opt-in)    |
+| dockerfile  | Dockerfile, Dockerfile.*, \*.dockerfile                          | dockerfile             |
 | dotenv      | .env .env.* env                                                  | dotenv files           |
 | ignore      | .gitignore .dockerignore                                         | ignore files           |
 | properties  | .properties (also spring-boot-properties)                        | java properties files  |
@@ -61,12 +44,13 @@
 ## Dependencies
 
 - [shfmt](https://github.com/mvdan/sh#shfmt) — downloaded automatically on first use (pinned version in `src/config.ts`, checksum-verified). Set `shellformat.path` only to use your own binary instead.
+- [dockerfmt](https://github.com/reteps/dockerfmt) — used for Dockerfiles.
 
 ## Custom configuration
 
 - `shellformat.path` the shfmt fullpath example [mac,linux]: `/usr/local/bin/shfmt` [windows]: `C:\bin\shfmt.exe`. User setting only.
 - `shellformat.flag` shfmt -h to see detailed usage. User setting only. Ignored when `shellformat.useEditorConfig` is on. Do not use `-w`.
-- `shellformat.effectLanguages` the languages the formatter runs on. Default is all supported languages except `dockerfile`. Add `dockerfile` to opt in.
+- `shellformat.effectLanguages` the languages the formatter runs on. Default is all supported languages.
 - `shellformat.useEditorConfig` use `.editorconfig` for shfmt flags instead of `shellformat.flag`. Supported keys: `indent_style`, `indent_size`, `shell_variant`, `binary_next_line`, `switch_case_indent`, `space_redirects`, `keep_padding`, `function_next_line`.
 
 ---
