@@ -14,10 +14,9 @@ suite('shfmt parse errors become diagnostics', function () {
     const ext = vscode.extensions.getExtension(EXTENSION_ID);
     assert.ok(ext, `extension ${EXTENSION_ID} is not present`);
     await ext.activate();
-    formatter = new Formatter(
-      { extensionPath: ext.extensionPath } as vscode.ExtensionContext,
-      vscode.window.createOutputChannel('shellformat-test')
-    );
+    formatter = new Formatter({
+      extensionPath: ext.extensionPath,
+    } as vscode.ExtensionContext);
   });
 
   test('format fails and sets a diagnostic from <standard input>:line:col:', async () => {

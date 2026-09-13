@@ -25,18 +25,13 @@ export enum ConfigItemName {
   Flag = 'flag',
   Path = 'path',
   EffectLanguages = 'effectLanguages',
-  ShowError = 'showError',
   UseEditorConfig = 'useEditorConfig',
 }
 
 export class Formatter {
-  static formatCommand = 'shfmt';
   diagnosticCollection: DiagnosticCollection;
 
-  constructor(
-    public context: vscode.ExtensionContext,
-    public output: vscode.OutputChannel
-  ) {
+  constructor(public context: vscode.ExtensionContext) {
     this.diagnosticCollection = vscode.languages.createDiagnosticCollection('shell-format');
   }
 
@@ -103,7 +98,6 @@ export class Formatter {
           }
         }
 
-        Formatter.formatCommand = prep.command;
         output.appendLine(`Effective shfmt flags: ${prep.flags}`);
 
         let shfmt = child_process.spawn(prep.command, prep.flags);
