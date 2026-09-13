@@ -44,7 +44,7 @@
 ## Dependencies
 
 - [shfmt](https://github.com/mvdan/sh#shfmt) — downloaded automatically on first use (pinned version in `src/config.ts`, checksum-verified). Set `shellformat.path` only to use your own binary instead.
-- [dockerfmt](https://github.com/reteps/dockerfmt) — used for Dockerfiles.
+- [dockerfmt](https://github.com/reteps/dockerfmt)
 
 ## Custom configuration
 
