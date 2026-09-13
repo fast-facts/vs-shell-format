@@ -11,6 +11,14 @@ suite('isAllowedTextDocument', () => {
     assert.strictEqual(isAllowedTextDocument(document), true);
   });
 
+  test('allows dockerfile on untitled', async () => {
+    const document = await vscode.workspace.openTextDocument({
+      language: 'dockerfile',
+      content: 'FROM alpine\n',
+    });
+    assert.strictEqual(isAllowedTextDocument(document), true);
+  });
+
   test('rejects a language that is not in the list', async () => {
     const document = await vscode.workspace.openTextDocument({
       language: 'plaintext',

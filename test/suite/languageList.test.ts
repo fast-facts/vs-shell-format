@@ -2,12 +2,12 @@ import * as assert from 'assert';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as vscode from 'vscode';
-import { activate } from '../../src/extension';
 
 const EXTENSION_ID = 'vs-shell-format.shell-format-secure';
 const DEFAULT_LANGUAGES = [
   'shellscript',
   'dotenv',
+  'dockerfile',
   'hosts',
   'jvmoptions',
   'ignore',
@@ -41,7 +41,7 @@ suite('Language list contract', function () {
     root = ext.extensionPath;
   });
 
-  test('default effectLanguages omits dockerfile and includes the rest', () => {
+  test('default effectLanguages includes dockerfile and matches package.json default', () => {
     const fromPkg = JSON.parse(fs.readFileSync(path.join(root, 'package.json'), 'utf8'))
       .contributes.configuration.properties['shellformat.effectLanguages'].default;
     const fromInspect = vscode.workspace
@@ -49,33 +49,14 @@ suite('Language list contract', function () {
       .inspect<string[]>('effectLanguages')?.defaultValue;
     assert.deepStrictEqual(fromPkg, fromInspect);
     assert.deepStrictEqual(fromPkg, [...DEFAULT_LANGUAGES]);
+    assert.ok(fromPkg.includes('dockerfile'));
   });
 
-  test('does not register a formatter for Dockerfile with default settings', async () => {
-    assert.strictEqual(await formatEdits('dockerfile'), undefined);
+  test('registers a formatter for Dockerfile with default settings', async () => {
+    assert.notStrictEqual(await formatEdits('dockerfile'), undefined);
   });
 
   test('registers a formatter for shellscript when the extension activates', async () => {
     assert.notStrictEqual(await formatEdits('shellscript'), undefined);
-  });
-
-  test('registers a formatter for Dockerfile after dockerfile is added to effectLanguages', async () => {
-    const settings = vscode.workspace.getConfiguration('shellformat');
-    const current = settings.get<string[]>('effectLanguages') ?? [];
-    const subscriptions: vscode.Disposable[] = [];
-    await settings.update(
-      'effectLanguages',
-      [...current, 'dockerfile'],
-      vscode.ConfigurationTarget.Global
-    );
-    try {
-      await activate({ subscriptions, extensionPath: root } as vscode.ExtensionContext);
-      assert.notStrictEqual(await formatEdits('dockerfile'), undefined);
-    } finally {
-      for (const d of subscriptions) {
-        d.dispose();
-      }
-      await settings.update('effectLanguages', undefined, vscode.ConfigurationTarget.Global);
-    }
   });
 });
