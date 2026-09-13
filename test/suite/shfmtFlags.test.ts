@@ -31,6 +31,22 @@ suite('prepareShfmt', () => {
     }
   });
 
+  test('adds --ln=mksh for mksh files', () => {
+    for (const name of ['t.mksh', '.mkshrc']) {
+      assert.deepStrictEqual(runFlags(name), ['--ln=mksh', '-i=4']);
+    }
+  });
+
+  test('adds --ln=posix for dash files', () => {
+    assert.deepStrictEqual(runFlags('t.dash'), ['--ln=posix', '-i=4']);
+  });
+
+  test('packaging scripts fall back to bash with no --ln flag', () => {
+    for (const name of ['PKGBUILD', 'APKBUILD', 'foo.ebuild', 'foo.eclass']) {
+      assert.deepStrictEqual(runFlags(name), ['-i=4']);
+    }
+  });
+
   test('rejects a missing custom path and does not return a command', () => {
     const result = prepareShfmt({
       ...BASE,

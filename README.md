@@ -33,18 +33,20 @@
 >
 > See [#14](https://github.com/fast-facts/vs-shell-format/issues/14) for background.
 
-| language    | extension                                      | description            |
-| ----------- | ---------------------------------------------- | ---------------------- |
-| shellscript | .sh .bash                                      | shell script files     |
-| dockerfile  | Dockerfile, Dockerfile.*, \*.dockerfile        | dockerfile (opt-in)    |
-| dotenv      | .env .env.* env                                | dotenv files           |
-| ignore      | .gitignore .dockerignore                       | ignore files           |
-| properties  | .properties (also spring-boot-properties)      | java properties files  |
-| jvmoptions  | .vmoptions , jvm.options                       | jvm options file       |
-| hosts       | hosts                                          | hosts file             |
-| azcli       | .azcli                                         | Azure CLI script files |
-| bats        | .bats                                          | Bats test file         |
-| zsh         | .zsh .zshrc .zshenv .zprofile .zlogin .zlogout | zsh script files       |
+| language    | extension                                                        | description            |
+| ----------- | ---------------------------------------------------------------- | ---------------------- |
+| shellscript | .sh .bash, bash dotfiles, PKGBUILD, APKBUILD, *.ebuild, *.eclass | shell script files     |
+| dockerfile  | Dockerfile, Dockerfile.*, \*.dockerfile                          | dockerfile (opt-in)    |
+| dotenv      | .env .env.* env                                                  | dotenv files           |
+| ignore      | .gitignore .dockerignore                                         | ignore files           |
+| properties  | .properties (also spring-boot-properties)                        | java properties files  |
+| jvmoptions  | .vmoptions , jvm.options                                         | jvm options file       |
+| hosts       | hosts                                                            | hosts file             |
+| azcli       | .azcli                                                           | Azure CLI script files |
+| bats        | .bats                                                            | Bats test file         |
+| zsh         | .zsh .zshrc .zshenv .zprofile .zlogin .zlogout                   | zsh script files       |
+| mksh        | .mksh .mkshrc                                                    | mksh script files      |
+| dash        | .dash                                                            | dash / posix shell     |
 
 ---
 

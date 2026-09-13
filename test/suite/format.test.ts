@@ -16,6 +16,14 @@ const CASES = [
   { name: 'application.properties', language: 'properties' },
   { name: 'idea.vmoptions', language: 'jvmoptions' },
   { name: 'azure.azcli', language: 'azcli' },
+  { name: 'sample.mksh', language: 'mksh' },
+  { name: '.mkshrc', language: 'mksh' },
+  { name: 'sample.dash', language: 'dash' },
+  { name: '.bashrc', language: 'shellscript' },
+  { name: 'PKGBUILD', language: 'shellscript' },
+  { name: 'APKBUILD', language: 'shellscript' },
+  { name: 'sample.ebuild', language: 'shellscript' },
+  { name: 'sample.eclass', language: 'shellscript' },
 ] as const;
 
 async function formatFile(filePath: string, language: string): Promise<string> {

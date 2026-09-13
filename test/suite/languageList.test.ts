@@ -16,6 +16,8 @@ const DEFAULT_LANGUAGES = [
   'azcli',
   'bats',
   'zsh',
+  'mksh',
+  'dash',
 ] as const;
 
 async function formatEdits(language: string): Promise<vscode.TextEdit[] | undefined> {
