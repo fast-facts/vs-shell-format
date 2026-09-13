@@ -1,9 +1,9 @@
 # Shell-like Formatter For VS Code
 
-<a href="https://marketplace.visualstudio.com/items?itemName=lumirelle.shell-format-rev" target="__blank"><img src="https://img.shields.io/visual-studio-marketplace/v/lumirelle.shell-format-rev.svg?color=eee&amp;label=VS%20Code%20Marketplace&logo=visual-studio-code" alt="Visual Studio Marketplace Version" /></a>
-<a href="https://marketplace.visualstudio.com/items?itemName=lumirelle.shell-format-rev" target="__blank"><img src="https://img.shields.io/visual-studio-marketplace/d/lumirelle.shell-format-rev?style=flat-square&label=Downloads" /></a>
-<a href="https://marketplace.visualstudio.com/items?itemName=lumirelle.shell-format-rev" target="__blank"><img src="https://img.shields.io/visual-studio-marketplace/i/lumirelle.shell-format-rev?style=flat-square&label=Installs" /></a>
-<a href="https://marketplace.visualstudio.com/items?itemName=lumirelle.shell-format-rev" target="__blank"><img src="https://img.shields.io/visual-studio-marketplace/stars/lumirelle.shell-format-rev?style=flat-square&label=Rating" /></a>
+<a href="https://marketplace.visualstudio.com/items?itemName=vs-shell-format.shell-format-secure" target="__blank"><img src="https://img.shields.io/visual-studio-marketplace/v/vs-shell-format.shell-format-secure.svg?color=eee&amp;label=VS%20Code%20Marketplace&logo=visual-studio-code" alt="Visual Studio Marketplace Version" /></a>
+<a href="https://marketplace.visualstudio.com/items?itemName=vs-shell-format.shell-format-secure" target="__blank"><img src="https://img.shields.io/visual-studio-marketplace/d/vs-shell-format.shell-format-secure?style=flat-square&label=Downloads" /></a>
+<a href="https://marketplace.visualstudio.com/items?itemName=vs-shell-format.shell-format-secure" target="__blank"><img src="https://img.shields.io/visual-studio-marketplace/i/vs-shell-format.shell-format-secure?style=flat-square&label=Installs" /></a>
+<a href="https://marketplace.visualstudio.com/items?itemName=vs-shell-format.shell-format-secure" target="__blank"><img src="https://img.shields.io/visual-studio-marketplace/stars/vs-shell-format.shell-format-secure?style=flat-square&label=Rating" /></a>
 <a href="https://github.com/lumirelle/vs-shell-format" target="__blank"><img src="https://github.com/lumirelle/vs-shell-format/actions/workflows/CI.yml/badge.svg" /></a>
 <a href="https://github.com/lumirelle/vs-shell-format" target="__blank"><img src="https://github.com/lumirelle/vs-shell-format/actions/workflows/CD.yml/badge.svg" /></a>
 
@@ -17,7 +17,7 @@
 >
 > See https://github.com/foxundermoon/vs-shell-format/issues/396.
 
-[Get it on the VS Code Marketplace!](https://marketplace.visualstudio.com/items?itemName=lumirelle.shell-format-rev)
+[Get it on the VS Code Marketplace!](https://marketplace.visualstudio.com/items?itemName=vs-shell-format.shell-format-secure)
 
 **Enjoy shellscript!**
 

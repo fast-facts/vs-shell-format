@@ -74,8 +74,8 @@ jobs:
             -H 'content-type: application/json' \
             -H 'accept: application/json;api-version=5.1-preview.1;excludeUrls=true' \
             -H 'cache-control: no-cache' \-H 'authority: marketplace.visualstudio.com' \
-            -H 'referer: https://marketplace.visualstudio.com/items?itemName=lumirelle.shell-format-rev' \
-            --data-binary '{"assetTypes":null,"filters":[{"criteria":[{"filterType":7,"value":"lumirelle.shell-format-rev"}],"direction":2,"pageSize":1,"pageNumber":1,"sortBy":0,"sortOrder":0,"pagingToken":null}],"flags":71}' |
+            -H 'referer: https://marketplace.visualstudio.com/items?itemName=vs-shell-format.shell-format-secure' \
+            --data-binary '{"assetTypes":null,"filters":[{"criteria":[{"filterType":7,"value":"vs-shell-format.shell-format-secure"}],"direction":2,"pageSize":1,"pageNumber":1,"sortBy":0,"sortOrder":0,"pagingToken":null}],"flags":71}' |
             jq '.results[0].extensions[0].versions[0].version')
           PUBLISHED_VERSION=$(echo $PUBLISHED_VERSION | tr -d '"')
           echo "PUBLISHED_VERSION=$PUBLISHED_VERSION"
