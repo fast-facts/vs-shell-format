@@ -30,7 +30,7 @@ function allowedDownloadUrl(url: string): string {
 export async function verifyShfmtChecksum(destPath: string): Promise<void> {
   try {
     const filename = getPlatFormFilename();
-    const expected = config.shfmtChecksums[filename];
+    const expected = config.shfmtChecksums[filename as keyof typeof config.shfmtChecksums];
     if (!expected) {
       throw new Error(`unknown shfmt filename: ${filename}`);
     }
@@ -67,12 +67,18 @@ function runDownload(
   progress?: (downloaded: number, contentLength?: number, prev_downloaded?: number) => void
 ) {
   return new Promise<void>(async (resolve, reject) => {
-    let response;
+    let response: IncomingMessage | undefined;
     try {
       for (let i = 0; i < MaxRedirects; ++i) {
         srcUrl = allowedDownloadUrl(srcUrl);
         response = await new Promise<IncomingMessage>((resolve) => https.get(srcUrl, resolve));
-        if (response.statusCode >= 300 && response.statusCode < 400 && response.headers.location) {
+        const redirectStatus = response.statusCode;
+        if (
+          redirectStatus !== undefined &&
+          redirectStatus >= 300 &&
+          redirectStatus < 400 &&
+          response.headers.location
+        ) {
           srcUrl = new URL(response.headers.location, srcUrl).href;
         } else {
           break;
@@ -82,8 +88,9 @@ function runDownload(
       reject(err);
       return;
     }
-    if (response.statusCode < 200 || response.statusCode >= 300) {
-      reject(new Error(`HTTP status ${response.statusCode} : ${response.statusMessage}`));
+    const statusCode = response?.statusCode;
+    if (!response || statusCode === undefined || statusCode < 200 || statusCode >= 300) {
+      reject(new Error(`HTTP status ${statusCode} : ${response?.statusMessage}`));
       return;
     }
     if (response.headers['content-type'] != 'application/octet-stream') {
@@ -95,7 +102,7 @@ function runDownload(
     if (progress) {
       const contentLength = response.headers['content-length']
         ? Number.parseInt(response.headers['content-length'])
-        : null;
+        : undefined;
       let downloaded = 0;
       let old_downloaded = 0;
       response.on('data', (chunk) => {
@@ -242,13 +249,14 @@ export async function checkInstall(context: vscode.ExtensionContext, output: vsc
       output.appendLine(`You can't use this plugin until the download is successful.`);
       output.show();
       await download2(url, destPath, (d, t, p) => {
-        if (Math.floor(p / 5) < Math.floor(d / 5)) {
+        if (t == null || p == null) {
+          output.append('.');
+        } else if (Math.floor(p / 5) < Math.floor(d / 5)) {
           output.appendLine(`downloaded:[${((100.0 * d) / t).toFixed(2)}%]`);
         } else {
           output.append('.');
         }
       });
-      // await fs.promises.chmod(destPath, 755);
       output.appendLine(`download success, You can use it successfully!`);
       output.appendLine('Start or issues can be submitted here https://git.io/shfmt');
     } catch (err) {

@@ -9,14 +9,15 @@ export enum EditTypes {
 }
 
 export class Edit {
-  action: number;
+  action: EditTypes;
   start: Position;
   end: Position;
   text: string;
 
-  constructor(action: number, start: Position) {
+  constructor(action: EditTypes, start: Position) {
     this.action = action;
     this.start = start;
+    this.end = start;
     this.text = '';
   }
 
@@ -42,7 +43,7 @@ export interface FilePatch {
 function parseUniDiffs(diffOutput: jsDiff.StructuredPatch[]): FilePatch[] {
   let filePatches: FilePatch[] = [];
   diffOutput.forEach((uniDiff: jsDiff.StructuredPatch) => {
-    let edit: Edit = null;
+    let edit: Edit | null = null;
     let edits: Edit[] = [];
     uniDiff.hunks.forEach((hunk: jsDiff.StructuredPatchHunk) => {
       let startLine = hunk.oldStart;
