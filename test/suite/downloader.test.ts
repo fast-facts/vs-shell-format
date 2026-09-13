@@ -1,30 +1,23 @@
 import * as assert from 'assert';
-
-// You can import and use all API from the 'vscode' module
-// as well as import your extension to test it
 import * as vscode from 'vscode';
-// import * as myExtension from '../extension';
 import {
-  DownloadProgress,
-  download,
   download2,
   getReleaseDownloadUrl,
   getPlatFormFilename,
   getDestPath,
+  verifyShfmtChecksum,
 } from '../../src/downloader';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as child_process from 'child_process';
 import { config } from '../../src/config';
 
-// Defines a Mocha test suite to group tests of similar kind together
 suite('Downloader Tests', () => {
   test('getDestPath always uses extension bin dir', () => {
     const dest = getDestPath({ extensionPath: '/ext' } as vscode.ExtensionContext);
     assert.strictEqual(dest, path.join('/ext', 'bin', getPlatFormFilename()));
   });
 
-  // Defines a Mocha unit test
   test('download', async () => {
     const url = getReleaseDownloadUrl();
     const dest = `${__dirname}/../${getPlatFormFilename()}`;
@@ -37,9 +30,7 @@ suite('Downloader Tests', () => {
       console.log(err);
     }
 
-    const success = await download2(url, dest, (p, t) => console.log(`${(100.0 * p) / t}%`));
-
-    await fs.promises.chmod(dest, 755);
+    await download2(url, dest, (p, t) => console.log(`${(100.0 * p) / t}%`));
 
     let version = await child_process.execFileSync(dest, ['--version'], {
       encoding: 'utf8',
@@ -49,4 +40,16 @@ suite('Downloader Tests', () => {
 
     assert.equal(version, config.shfmtVersion);
   }).timeout('60s');
+
+  test('rejects blocked download urls', async () => {
+    await assert.rejects(download2('http://github.com/x', `${__dirname}/../blocked-http`));
+    await assert.rejects(download2('https://evil.example/x', `${__dirname}/../blocked-host`));
+  });
+
+  test('hash mismatch rejects', async () => {
+    const dest = `${__dirname}/../shfmt-hash-mismatch`;
+    await fs.promises.writeFile(dest, 'not-shfmt');
+    await assert.rejects(verifyShfmtChecksum(dest));
+    await assert.rejects(fs.promises.access(dest));
+  });
 });
