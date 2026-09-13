@@ -2,24 +2,13 @@ import * as vscode from 'vscode';
 import * as child_process from 'child_process';
 import { fileExists, substitutePath } from './pathUtil';
 import { userOrDefaultSetting } from './userSettings';
-import { output } from './extension';
-
 import { getEdits } from './diffUtils';
-
-import {
-  Diagnostic,
-  DiagnosticSeverity,
-  DiagnosticCollection,
-  TextDocument,
-  Position,
-  FormattingOptions,
-  TextEdit,
-} from 'vscode';
 import * as editorconfig from 'editorconfig';
 
 import { getDestPath } from './downloader';
 import { prepareShfmt } from './shfmtFlags';
 export const configurationPrefix = 'shellformat';
+export const output = vscode.window.createOutputChannel('shellformat');
 
 export enum ConfigItemName {
   Path = 'path',
@@ -27,18 +16,17 @@ export enum ConfigItemName {
 }
 
 export class Formatter {
-  diagnosticCollection: DiagnosticCollection;
+  diagnosticCollection: vscode.DiagnosticCollection;
 
   constructor(public context: vscode.ExtensionContext) {
     this.diagnosticCollection = vscode.languages.createDiagnosticCollection('shell-format');
   }
 
-  getShfmtPath() {
-    return getDestPath(this.context);
-  }
-
-  public formatDocument(document: TextDocument, options?: FormattingOptions): Thenable<TextEdit[]> {
-    const start = new Position(0, 0);
+  public formatDocument(
+    document: vscode.TextDocument,
+    options?: vscode.FormattingOptions
+  ): Thenable<vscode.TextEdit[]> {
+    const start = new vscode.Position(0, 0);
     const end = new vscode.Position(
       document.lineCount - 1,
       document.lineAt(document.lineCount - 1).text.length
@@ -50,7 +38,7 @@ export class Formatter {
 
   public async formatDocumentWithContent(
     content: string,
-    document: TextDocument,
+    document: vscode.TextDocument,
     options?: vscode.FormattingOptions
   ): Promise<vscode.TextEdit[]> {
     if (document.languageId === 'dockerfile') {
@@ -91,7 +79,7 @@ export class Formatter {
           flag,
           useEditorConfig,
           editorConfig: edcfgOptions,
-          defaultCommand: this.getShfmtPath(),
+          defaultCommand: getDestPath(this.context),
           pathExists: binPath ? fileExists(binPath) : true,
           options,
         });
@@ -137,7 +125,7 @@ export class Formatter {
           shfmtErr.push(bc);
         });
 
-        let textEdits: TextEdit[] = [];
+        let textEdits: vscode.TextEdit[] = [];
         shfmt.on('close', (code) => {
           if (code == 0) {
             this.diagnosticCollection.delete(document.uri);
@@ -167,13 +155,13 @@ export class Formatter {
                 let line = parseInt(errLoc[1]);
                 let column = parseInt(errLoc[2]);
 
-                const diag: Diagnostic = {
+                const diag: vscode.Diagnostic = {
                   range: new vscode.Range(
                     new vscode.Position(line, column),
                     new vscode.Position(line, column)
                   ),
                   message: errMsg.slice('<standard input>:'.length, errMsg.length),
-                  severity: DiagnosticSeverity.Error,
+                  severity: vscode.DiagnosticSeverity.Error,
                 };
 
                 this.diagnosticCollection.delete(document.uri);

@@ -58,4 +58,8 @@ suite('Language list contract', function () {
   test('registers a formatter for shellscript when the extension activates', async () => {
     assert.notStrictEqual(await formatEdits('shellscript'), undefined);
   });
+
+  test('does not register a formatter for plaintext', async () => {
+    assert.strictEqual(await formatEdits('plaintext'), undefined);
+  });
 });
