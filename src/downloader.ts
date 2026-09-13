@@ -114,16 +114,6 @@ function runDownload(
   });
 }
 
-// const fileExtensionMap = {
-//   // 'arm', 'arm64', 'ia32', 'ppc', 'ppc64', 's390', 's390x', 'x32', and 'x64'
-//   arm: "arm",
-//   arm64: "arm",
-//   ia32: "386",
-//   mips: "mips",
-//   x32: "386",
-//   x64: "amd64"
-// };
-
 enum Arch {
   arm = 'arm',
   arm64 = 'arm64',
