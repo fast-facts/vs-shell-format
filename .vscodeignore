@@ -7,9 +7,10 @@
 .vscode-test/**
 bin/
 image/**
-out/test/**
+out/**
 package-lock.json
 src/**
 test/**
 tsconfig.json
+tsconfig.test.json
 typings/
