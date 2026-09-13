@@ -1,10 +1,7 @@
-out
-node_modules
-.vscode-test
-.DS_Store
 *.vsix
-branch.txt
-minichangelog.txt
-version.txt
-dist
-bin
+.DS_Store
+.vscode-test/
+bin/
+dist/
+node_modules/
+out/
