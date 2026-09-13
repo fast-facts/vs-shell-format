@@ -22,7 +22,6 @@ import { prepareShfmt } from './shfmtFlags';
 export const configurationPrefix = 'shellformat';
 
 export enum ConfigItemName {
-  Flag = 'flag',
   Path = 'path',
   EffectLanguages = 'effectLanguages',
 }
