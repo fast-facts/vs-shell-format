@@ -11,6 +11,7 @@ const CASES = [
   { name: '.zshrc', language: 'zsh' },
   { name: 'sample.bats', language: 'bats' },
   { name: '.env', language: 'dotenv' },
+  { name: 'Dockerfile', language: 'dockerfile' },
   { name: 'hosts', language: 'hosts' },
   { name: '.gitignore', language: 'ignore' },
   { name: 'application.properties', language: 'properties' },
@@ -73,4 +74,33 @@ suite('Format golden files', function () {
       assert.strictEqual(got(await formatFile(golden, c.language)), expected);
     });
   }
+
+  test('dockerfile keeps backslash continuations and is idempotent', async () => {
+    const formatUntitled = async (content: string): Promise<string> => {
+      const document = await vscode.workspace.openTextDocument({
+        language: 'dockerfile',
+        content,
+      });
+      const edits = await vscode.commands.executeCommand<vscode.TextEdit[] | undefined>(
+        'vscode.executeFormatDocumentProvider',
+        document.uri,
+        { tabSize: 4, insertSpaces: true }
+      );
+      const sorted = [...(edits ?? [])].sort(
+        (a, b) => b.range.start.compareTo(a.range.start) || b.range.end.compareTo(a.range.end)
+      );
+      let result = document.getText();
+      for (const edit of sorted) {
+        const start = document.offsetAt(edit.range.start);
+        const end = document.offsetAt(edit.range.end);
+        result = result.slice(0, start) + edit.newText + result.slice(end);
+      }
+      return result.replace(/\r\n/g, '\n');
+    };
+
+    const once = await formatUntitled('FROM alpine\nRUN echo a && \\\n    echo b\n');
+    assert.ok(once.includes('\\'), 'backslash continuation must be kept');
+    assert.ok(!/&&\s*$/m.test(once), 'must not strip backslash after &&');
+    assert.strictEqual(await formatUntitled(once), once);
+  });
 });
