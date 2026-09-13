@@ -31,28 +31,3 @@ url = "https://nodejs.org/dist/v24.16.0/node-v24.16.0-darwin-x64.tar.gz"
 [tools.node."platforms.windows-x64"]
 checksum = "sha256:edaca9bd58ec8e92037dac4e877d52f6b8f430b81c18b57e264b4e2fb111cd56"
 url = "https://nodejs.org/dist/v24.16.0/node-v24.16.0-win-x64.zip"
-
-[[tools.yarn]]
-version = "1.22.22"
-backend = "vfox:mise-plugins/vfox-yarn"
-
-[tools.yarn."platforms.linux-arm64"]
-url = "https://classic.yarnpkg.com/downloads/1.22.22/yarn-v1.22.22.tar.gz"
-
-[tools.yarn."platforms.linux-arm64-musl"]
-url = "https://classic.yarnpkg.com/downloads/1.22.22/yarn-v1.22.22.tar.gz"
-
-[tools.yarn."platforms.linux-x64"]
-url = "https://classic.yarnpkg.com/downloads/1.22.22/yarn-v1.22.22.tar.gz"
-
-[tools.yarn."platforms.linux-x64-musl"]
-url = "https://classic.yarnpkg.com/downloads/1.22.22/yarn-v1.22.22.tar.gz"
-
-[tools.yarn."platforms.macos-arm64"]
-url = "https://classic.yarnpkg.com/downloads/1.22.22/yarn-v1.22.22.tar.gz"
-
-[tools.yarn."platforms.macos-x64"]
-url = "https://classic.yarnpkg.com/downloads/1.22.22/yarn-v1.22.22.tar.gz"
-
-[tools.yarn."platforms.windows-x64"]
-url = "https://classic.yarnpkg.com/downloads/1.22.22/yarn-v1.22.22.tar.gz"
