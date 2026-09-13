@@ -1,6 +1,6 @@
 {
   "name": "shell-format-secure",
-  "displayName": "VSCode Shell-like Formatter",
+  "displayName": "Shell-like Formatter Secure",
   "description": "Revision of shell-format: A formatter for shell-like scripts, Dockerfile, gitignore, dotenv, /etc/hosts, jvmoptions, and other file types",
   "version": "0.0.0-semantic-release",
   "publisher": "vs-shell-format",
