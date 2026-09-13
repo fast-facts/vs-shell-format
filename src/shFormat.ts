@@ -3,6 +3,7 @@ import * as child_process from 'child_process';
 import * as path from 'path';
 import * as fs from 'fs';
 import { fileExists, getExecutableFileUnderPath, substitutePath } from './pathUtil';
+import { userOrDefaultSetting } from './userSettings';
 import { output } from './extension';
 
 import { isDiffToolAvailable, getEdits, getEditsFromUnifiedDiffStr } from '../src/diffUtils';
@@ -400,9 +401,13 @@ function isExecutedFmtCommand(): Boolean {
 }
 
 export function getSettings(key: string) {
-  let settings = vscode.workspace.getConfiguration(configurationPrefix);
-  if (key === 'path' && settings[key]) {
-    return substitutePath(settings[key]);
+  const settings = vscode.workspace.getConfiguration(configurationPrefix);
+  if (key === ConfigItemName.Path || key === ConfigItemName.Flag) {
+    const picked = userOrDefaultSetting(settings.inspect<string | null>(key));
+    if (key === ConfigItemName.Path && picked) {
+      return substitutePath(picked);
+    }
+    return picked ?? null;
   }
   return key !== undefined ? settings[key] : null;
 }

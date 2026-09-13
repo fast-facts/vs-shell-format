@@ -25,7 +25,11 @@
   ],
   "main": "./dist/extension",
   "capabilities": {
-    "documentFormattingProvider": "true"
+    "documentFormattingProvider": "true",
+    "untrustedWorkspaces": {
+      "supported": "limited",
+      "restrictedConfigurations": ["shellformat.path", "shellformat.flag"]
+    }
   },
   "icon": "logo.png",
   "repository": {
@@ -160,7 +164,9 @@
             "null"
           ],
           "default": null,
-          "description": "the shfmt fullpath  example[mac,linux] /usr/local/bin/shfmt  [windows] C:/bin/shfmt.exe   download from https://github.com/mvdan/sh/releases"
+          "scope": "application",
+          "restricted": true,
+          "description": "the shfmt fullpath  example[mac,linux] /usr/local/bin/shfmt  [windows] C:/bin/shfmt.exe   download from https://github.com/mvdan/sh/releases. User setting only; a workspace cannot set this."
         },
         "shellformat.flag": {
           "type": [
@@ -168,7 +174,9 @@
             "null"
           ],
           "default": null,
-          "description": "shfmt -h to see detail usage, example: -p -bn -ci"
+          "scope": "application",
+          "restricted": true,
+          "description": "shfmt -h to see detail usage, example: -p -bn -ci. User setting only; a workspace cannot set this."
         },
         "shellformat.effectLanguages": {
           "type": "array",
