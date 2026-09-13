@@ -27,23 +27,6 @@ function allowedDownloadUrl(url: string): string {
   return parsed.href;
 }
 
-export interface DownloadProgress {
-  (progress: number): void;
-}
-/**
- *  https://repl.it/@lordproud/Downloading-file-in-nodejs
- * @param url
- * @param path
- * @param progress
- */
-export async function download(
-  url: string,
-  path: string,
-  progress?: DownloadProgress
-): Promise<any> {
-  // deprecated
-}
-
 export async function verifyShfmtChecksum(destPath: string): Promise<void> {
   try {
     const filename = getPlatFormFilename();
@@ -130,16 +113,6 @@ function runDownload(
     response.on('error', reject);
   });
 }
-
-// const fileExtensionMap = {
-//   // 'arm', 'arm64', 'ia32', 'ppc', 'ppc64', 's390', 's390x', 'x32', and 'x64'
-//   arm: "arm",
-//   arm64: "arm",
-//   ia32: "386",
-//   mips: "mips",
-//   x32: "386",
-//   x64: "amd64"
-// };
 
 enum Arch {
   arm = 'arm',
