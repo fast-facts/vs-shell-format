@@ -11,6 +11,7 @@ const CASES = [
   { name: '.zshrc', language: 'zsh' },
   { name: 'sample.bats', language: 'bats' },
   { name: '.env', language: 'dotenv' },
+  { name: 'Dockerfile', language: 'dockerfile' },
   { name: 'hosts', language: 'hosts' },
   { name: '.gitignore', language: 'ignore' },
   { name: 'application.properties', language: 'properties' },
@@ -26,11 +27,7 @@ const CASES = [
   { name: 'sample.eclass', language: 'shellscript' },
 ] as const;
 
-async function formatFile(filePath: string, language: string): Promise<string> {
-  const document = await vscode.languages.setTextDocumentLanguage(
-    await vscode.workspace.openTextDocument(filePath),
-    language
-  );
+async function formatDocument(document: vscode.TextDocument): Promise<string> {
   const edits = await vscode.commands.executeCommand<vscode.TextEdit[] | undefined>(
     'vscode.executeFormatDocumentProvider',
     document.uri,
@@ -45,7 +42,16 @@ async function formatFile(filePath: string, language: string): Promise<string> {
     const end = document.offsetAt(edit.range.end);
     result = result.slice(0, start) + edit.newText + result.slice(end);
   }
-  return result;
+  return result.replace(/\r\n/g, '\n');
+}
+
+async function formatFile(filePath: string, language: string): Promise<string> {
+  return formatDocument(
+    await vscode.languages.setTextDocumentLanguage(
+      await vscode.workspace.openTextDocument(filePath),
+      language
+    )
+  );
 }
 
 suite('Format golden files', function () {
@@ -65,12 +71,23 @@ suite('Format golden files', function () {
     test(`formats ${c.name}`, async () => {
       const golden = path.join(root, 'test', 'golden', c.name);
       const expected = fs.readFileSync(golden, 'utf8').replace(/\r\n/g, '\n');
-      const got = (s: string) => s.replace(/\r\n/g, '\n');
       assert.strictEqual(
-        got(await formatFile(path.join(root, 'test', 'supported', c.name), c.language)),
+        await formatFile(path.join(root, 'test', 'supported', c.name), c.language),
         expected
       );
-      assert.strictEqual(got(await formatFile(golden, c.language)), expected);
+      assert.strictEqual(await formatFile(golden, c.language), expected);
     });
   }
+
+  test('dockerfile keeps backslash continuations and is idempotent', async () => {
+    const formatUntitled = async (content: string): Promise<string> =>
+      formatDocument(
+        await vscode.workspace.openTextDocument({ language: 'dockerfile', content })
+      );
+
+    const once = await formatUntitled('FROM alpine\nRUN echo a && \\\n    echo b\n');
+    assert.ok(once.includes('\\'), 'backslash continuation must be kept');
+    assert.ok(!/&&\s*$/m.test(once), 'must not strip backslash after &&');
+    assert.strictEqual(await formatUntitled(once), once);
+  });
 });
