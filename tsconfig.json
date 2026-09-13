@@ -5,7 +5,10 @@
     "outDir": "dist",
     "lib": ["esnext"],
     "sourceMap": true,
-    "rootDir": "src"
+    "rootDir": "src",
+    "strict": false,
+    "skipLibCheck": true,
+    "types": ["node", "mocha"]
   },
   "include": ["src"]
 }

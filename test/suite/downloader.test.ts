@@ -10,7 +10,7 @@ import {
   verifyShfmtChecksum,
 } from '../../src/downloader';
 import * as fs from 'fs';
-import * as https from 'https';
+import https = require('https');
 import * as path from 'path';
 import { config } from '../../src/config';
 
