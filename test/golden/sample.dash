@@ -1,0 +1,12 @@
+#!/bin/dash
+
+greet() {
+    if [ "$1" = "hi" ]; then
+        echo hello
+    fi
+}
+
+setup() {
+    name=world
+    echo "$name"
+}

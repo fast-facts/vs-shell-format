@@ -1,0 +1,11 @@
+#!/usr/bin/env mksh
+
+greet() {
+if [ "$1" = "hi" ]; then
+echo hello
+  fi
+}
+
+setup() {
+typeset name=world
+}

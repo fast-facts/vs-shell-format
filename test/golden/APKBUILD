@@ -1,0 +1,13 @@
+pkgname=sample
+pkgver=1.0
+pkgrel=0
+
+build() {
+    if [ -n "$pkgver" ]; then
+        make
+    fi
+}
+
+package() {
+    make DESTDIR="$pkgdir" install
+}
