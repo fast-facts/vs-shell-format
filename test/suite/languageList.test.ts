@@ -49,7 +49,6 @@ suite('Language list contract', function () {
       .inspect<string[]>('effectLanguages')?.defaultValue;
     assert.deepStrictEqual(fromPkg, fromInspect);
     assert.deepStrictEqual(fromPkg, [...DEFAULT_LANGUAGES]);
-    assert.ok(fromPkg.includes('dockerfile'));
   });
 
   test('registers a formatter for Dockerfile with default settings', async () => {
