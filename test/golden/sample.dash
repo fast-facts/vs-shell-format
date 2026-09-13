@@ -8,5 +8,8 @@ greet() {
 
 setup() {
     name=world
-    echo "$name"
+    if [ -n "$name" ]; then
+        echo "$name" |
+            cat
+    fi
 }

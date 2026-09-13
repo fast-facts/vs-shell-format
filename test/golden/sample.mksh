@@ -8,4 +8,8 @@ greet() {
 
 setup() {
     typeset name=world
+    if [ -n "$name" ]; then
+        echo "$name" |
+            cat
+    fi
 }

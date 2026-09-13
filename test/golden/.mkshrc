@@ -13,4 +13,6 @@ my_function() {
 
 # mksh options
 set -o noclobber
-PS1='$ '
+if [ -n "$PS1" ]; then
+    PS1='$ '
+fi

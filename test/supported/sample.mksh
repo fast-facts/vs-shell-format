@@ -1,11 +1,15 @@
 #!/usr/bin/env mksh
 
 greet() {
-if [ "$1" = "hi" ]; then
-echo hello
-  fi
+if [  "$1"  =  "hi"  ]
+then
+echo   hello
+fi
 }
 
 setup() {
-typeset name=world
+typeset  name=world
+if [ -n "$name" ];then echo "$name"|
+cat
+fi
 }

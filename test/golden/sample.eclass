@@ -3,10 +3,13 @@
 
 sample_src_compile() {
     if [ -n "$EAPI" ]; then
-        emake
+        emake -j"$(nproc)"
     fi
 }
 
 sample_src_install() {
-    emake DESTDIR="${D}" install
+    if [ -n "${D}" ]; then
+        emake DESTDIR="${D}" install |
+            cat
+    fi
 }

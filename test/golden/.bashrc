@@ -13,4 +13,6 @@ my_function() {
 
 # bash options
 set -o noclobber
-PS1='\u@\h:\w\$ '
+if [ -n "$PS1" ]; then
+    PS1='\u@\h:\w\$ '
+fi

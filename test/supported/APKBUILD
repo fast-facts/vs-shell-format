@@ -3,11 +3,14 @@ pkgver=1.0
 pkgrel=0
 
 build() {
-if [ -n "$pkgver" ]; then
-make
-  fi
+if [ -n  "$pkgver" ]
+then
+make   -j"$(nproc)"
+fi
 }
 
 package() {
-make DESTDIR="$pkgdir" install
+if [ -d "$pkgdir" ];then make DESTDIR="$pkgdir"  install|
+cat
+fi
 }
