@@ -3,6 +3,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { activate } from '../../src/extension';
+import { getPlatformFilename } from '../../src/downloader';
 
 const EXTENSION_ID = 'vs-shell-format.shell-format-secure';
 const DEFAULT_LANGUAGES = [
@@ -20,6 +21,20 @@ const DEFAULT_LANGUAGES = [
   'mksh',
   'dash',
 ] as const;
+
+async function waitForShfmt(extensionPath: string): Promise<void> {
+  const dest = path.join(extensionPath, 'bin', getPlatformFilename());
+  const deadline = Date.now() + 50000;
+  while (Date.now() < deadline) {
+    try {
+      await fs.promises.access(dest, fs.constants.X_OK);
+      return;
+    } catch {
+      await new Promise(resolve => setTimeout(resolve, 50));
+    }
+  }
+  assert.fail(`shfmt missing at ${dest}`);
+}
 
 async function formatEdits(language: string): Promise<vscode.TextEdit[] | undefined> {
   const document = await vscode.workspace.openTextDocument({ language, content: 'echo  hello\n' });
@@ -40,6 +55,7 @@ suite('Language list contract', function () {
     assert.ok(ext, `extension ${EXTENSION_ID} is not present`);
     await ext.activate();
     root = ext.extensionPath;
+    await waitForShfmt(root);
   });
 
   test('default effectLanguages includes dockerfile and matches package.json default', () => {
@@ -64,12 +80,9 @@ suite('Language list contract', function () {
     assert.strictEqual(await formatEdits('plaintext'), undefined);
   });
 
-  test('activation registers providers before the install finishes', async () => {
-    let releaseInstall!: () => void;
-    const installGate = new Promise<void>(resolve => {
-      releaseInstall = resolve;
-    });
-    let installCalled = false;
+  test('activate resolves while checkInstall is still pending', async () => {
+    const installGate = new Promise<void>(() => undefined);
+    let checkInstallStarted = false;
     let providerRegistrations = 0;
     const originalRegister = vscode.languages.registerDocumentFormattingEditProvider;
     vscode.languages.registerDocumentFormattingEditProvider = ((
@@ -83,22 +96,22 @@ suite('Language list contract', function () {
       subscriptions: [] as vscode.Disposable[],
     } as unknown as vscode.ExtensionContext;
     try {
-      const pending = activate(context, {
-        checkInstall: async () => {
-          installCalled = true;
-          await installGate;
+      await activate(context, {
+        checkInstall: () => {
+          checkInstallStarted = true;
+          return installGate;
         },
       });
-      await new Promise(resolve => setTimeout(resolve, 50));
-      assert.ok(installCalled, 'expected the install check to start');
+      assert.ok(checkInstallStarted, 'expected checkInstall to start');
       assert.ok(
         providerRegistrations >= DEFAULT_LANGUAGES.length,
         `expected providers registered, got ${providerRegistrations}`
       );
-      releaseInstall();
-      await pending;
     } finally {
       vscode.languages.registerDocumentFormattingEditProvider = originalRegister;
+      for (const d of context.subscriptions) {
+        d.dispose();
+      }
     }
   });
 
