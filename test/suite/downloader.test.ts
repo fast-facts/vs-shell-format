@@ -194,4 +194,13 @@ suite('Downloader Tests', () => {
     const output = { appendLine: () => undefined, show: () => undefined } as unknown as vscode.OutputChannel;
     assert.strictEqual(await checkNeedInstall('/nonexistent-dest', output, process.execPath), false);
   });
+
+  test('install check state is not shared', async () => {
+    const output = { appendLine: () => undefined, show: () => undefined } as unknown as vscode.OutputChannel;
+    const a = { checked: false };
+    const b = { checked: false };
+    await checkNeedInstall('/nonexistent-dest', output, process.execPath, a);
+    assert.strictEqual(a.checked, true);
+    assert.strictEqual(b.checked, false);
+  });
 });

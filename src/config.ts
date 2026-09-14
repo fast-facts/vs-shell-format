@@ -1,6 +1,5 @@
 export const config = {
   shfmtVersion: 'v3.14.1',
-  needCheckInstall: true,
   shfmtChecksums: {
     'shfmt_v3.14.1_darwin_amd64': 'd33eee0da0f92835b3562e9767a05cee7e4eaeef47daa03bfd09da17b4b590a6',
     'shfmt_v3.14.1_darwin_arm64': 'b7c872db63553ccffc7253aba3ed7d4885a27d83f1ba567b1138c6315a5847e5',

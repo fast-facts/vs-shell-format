@@ -91,14 +91,15 @@ export function getDestPath(context: vscode.ExtensionContext): string {
 export async function checkInstall(
   context: vscode.ExtensionContext,
   output: vscode.OutputChannel,
-  configPath: string | null
+  configPath: string | null,
+  state: { checked: boolean }
 ) {
-  if (!config.needCheckInstall) {
+  if (state.checked) {
     return;
   }
   const destPath = getDestPath(context);
   await fs.promises.mkdir(path.dirname(destPath), { recursive: true });
-  const needDownload = await checkNeedInstall(destPath, output, configPath);
+  const needDownload = await checkNeedInstall(destPath, output, configPath, state);
   if (needDownload) {
     output.show();
     try {
@@ -144,13 +145,14 @@ async function cleanFile(file: string) {
 export async function checkNeedInstall(
   dest: string,
   output: vscode.OutputChannel,
-  configPath: string | null
+  configPath: string | null,
+  state: { checked: boolean } = { checked: false }
 ): Promise<boolean> {
   try {
     if (configPath) {
       try {
         await fs.promises.access(configPath, fs.constants.X_OK);
-        config.needCheckInstall = false;
+        state.checked = true;
         return false;
       } catch {
         output.appendLine(
@@ -171,7 +173,7 @@ export async function checkNeedInstall(
 
     const needInstall = version !== config.shfmtVersion;
     if (!needInstall) {
-      config.needCheckInstall = false;
+      state.checked = true;
     } else {
       output.appendLine(
         `current shfmt version : ${version}  ,is outdate to new version : ${config.shfmtVersion}`

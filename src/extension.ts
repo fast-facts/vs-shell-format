@@ -29,7 +29,7 @@ export async function activate(
       }
     })
   );
-  await deps.checkInstall(context, output, getSettings('path'));
+  await deps.checkInstall(context, output, getSettings('path'), { checked: false });
 }
 
 let activeProviderDisposables: vscode.Disposable[] = [];
