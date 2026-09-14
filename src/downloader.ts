@@ -134,7 +134,7 @@ export async function checkInstall(
       output.appendLine(`You can't use this plugin until the download is successful.`);
       await download2(url, destPath);
       output.appendLine(`download success, You can use it successfully!`);
-      output.appendLine('Start or issues can be submitted here https://git.io/shfmt');
+      output.appendLine('Start or issues can be submitted here https://github.com/mvdan/sh/issues');
     } catch (err) {
       output.appendLine(`download failed: ${err}`);
       output.show();
