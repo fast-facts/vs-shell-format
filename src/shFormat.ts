@@ -101,7 +101,7 @@ export function runShfmt(
 
 export enum ConfigItemName {
   Path = 'path',
-  EffectLanguages = 'effectLanguages'
+  EffectLanguages = 'effectLanguages',
 }
 
 export class Formatter {

@@ -83,7 +83,7 @@ enum Arch {
   i386 = '386',
   mips = 'mips',
   x64 = 'amd64',
-  unknown = 'unknown'
+  unknown = 'unknown',
 }
 
 enum Platform {
@@ -93,7 +93,7 @@ enum Platform {
   netbsd = 'netbsd',
   openbsd = 'openbsd',
   windows = 'windows',
-  unknown = 'unknown'
+  unknown = 'unknown',
 }
 
 const archByNode: Partial<Record<NodeJS.Architecture, Arch>> = {

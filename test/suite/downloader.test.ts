@@ -8,7 +8,7 @@ import {
   getPlatform,
   getPlatformFilename,
   getReleaseDownloadUrl,
-  verifyShfmtChecksum
+  verifyShfmtChecksum,
 } from '../../src/downloader';
 import * as fs from 'fs';
 import * as path from 'path';
