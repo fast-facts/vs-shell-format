@@ -8,7 +8,7 @@ import {
   ShellDocumentFormattingEditProvider,
 } from './shFormat';
 
-import { checkInstall } from './downloader';
+import { checkInstall, trackInstall } from './downloader';
 
 export enum DocumentFilterScheme {
   File = 'file',
@@ -29,11 +29,11 @@ export async function activate(
       }
     })
   );
-  void deps
-    .checkInstall(context, output, getSettings('path'), { checked: false })
-    .catch((err: unknown) => {
-      output.appendLine(err instanceof Error ? err.message : String(err));
-    });
+  void trackInstall(
+    deps.checkInstall(context, output, getSettings('path'), { checked: false })
+  ).catch((err: unknown) => {
+    output.appendLine(err instanceof Error ? err.message : String(err));
+  });
 }
 
 let activeProviderDisposables: vscode.Disposable[] = [];
