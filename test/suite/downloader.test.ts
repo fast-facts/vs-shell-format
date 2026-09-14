@@ -14,6 +14,7 @@ import {
   whenInstallReady,
 } from '../../src/downloader';
 import * as fs from 'fs';
+import * as os from 'os';
 import * as path from 'path';
 import { config } from '../../src/config';
 
@@ -267,6 +268,29 @@ suite('Downloader Tests', () => {
       { checked: false }
     );
     assert.strictEqual(showCalls, 1);
+  });
+
+  test('checkInstall removes leftover shfmt binaries but keeps the current file and unrelated names', async () => {
+    const extPath = await fs.promises.mkdtemp(path.join(os.tmpdir(), 'shfmt-bin-'));
+    try {
+      const bin = path.join(extPath, 'bin');
+      const current = getPlatformFilename();
+      await fs.promises.mkdir(bin);
+      await fs.promises.writeFile(path.join(bin, current), 'current');
+      await fs.promises.writeFile(path.join(bin, 'shfmt_v0.0.1_linux_amd64'), 'old');
+      await fs.promises.writeFile(path.join(bin, 'notes.txt'), 'keep');
+      await checkInstall(
+        { extensionPath: extPath } as vscode.ExtensionContext,
+        { appendLine: () => undefined, show: () => undefined } as unknown as vscode.OutputChannel,
+        process.execPath,
+        { checked: false }
+      );
+      await assert.rejects(fs.promises.access(path.join(bin, 'shfmt_v0.0.1_linux_amd64')));
+      assert.strictEqual(await fs.promises.readFile(path.join(bin, current), 'utf8'), 'current');
+      assert.strictEqual(await fs.promises.readFile(path.join(bin, 'notes.txt'), 'utf8'), 'keep');
+    } finally {
+      await fs.promises.rm(extPath, { recursive: true, force: true });
+    }
   });
 
   test('install check state is not shared', async () => {
