@@ -70,23 +70,36 @@ suite('Language list contract', function () {
       releaseInstall = resolve;
     });
     let installCalled = false;
+    let providerRegistrations = 0;
+    const originalRegister = vscode.languages.registerDocumentFormattingEditProvider;
+    vscode.languages.registerDocumentFormattingEditProvider = ((
+      selector: vscode.DocumentSelector,
+      provider: vscode.DocumentFormattingEditProvider
+    ) => {
+      providerRegistrations += 1;
+      return originalRegister.call(vscode.languages, selector, provider);
+    }) as typeof originalRegister;
     const context = {
       subscriptions: [] as vscode.Disposable[],
     } as unknown as vscode.ExtensionContext;
-    const pending = activate(context, {
-      checkInstall: async () => {
-        installCalled = true;
-        await installGate;
-      },
-    });
-    await new Promise(resolve => setTimeout(resolve, 50));
-    assert.ok(installCalled, 'expected the install check to start');
-    assert.ok(
-      context.subscriptions.length >= DEFAULT_LANGUAGES.length,
-      `expected providers registered, got ${context.subscriptions.length}`
-    );
-    releaseInstall();
-    await pending;
+    try {
+      const pending = activate(context, {
+        checkInstall: async () => {
+          installCalled = true;
+          await installGate;
+        },
+      });
+      await new Promise(resolve => setTimeout(resolve, 50));
+      assert.ok(installCalled, 'expected the install check to start');
+      assert.ok(
+        providerRegistrations >= DEFAULT_LANGUAGES.length,
+        `expected providers registered, got ${providerRegistrations}`
+      );
+      releaseInstall();
+      await pending;
+    } finally {
+      vscode.languages.registerDocumentFormattingEditProvider = originalRegister;
+    }
   });
 
   test('narrowing effectLanguages unregisters other providers live', async function () {
