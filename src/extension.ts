@@ -19,13 +19,13 @@ export async function activate(
   context: vscode.ExtensionContext,
   deps: { checkInstall: typeof checkInstall } = { checkInstall }
 ) {
-  const shfmter = new Formatter(context);
-  const shFmtProvider = new ShellDocumentFormattingEditProvider(shfmter);
-  registerFormattingProviders(context, shFmtProvider);
+  const shFmtProvider = new ShellDocumentFormattingEditProvider(new Formatter(context));
+  registerFormattingProviders(shFmtProvider);
   context.subscriptions.push(
+    new vscode.Disposable(disposeActiveProviders),
     vscode.workspace.onDidChangeConfiguration(e => {
       if (e.affectsConfiguration(`${configurationPrefix}.${ConfigItemName.EffectLanguages}`)) {
-        registerFormattingProviders(context, shFmtProvider);
+        registerFormattingProviders(shFmtProvider);
       }
     })
   );
@@ -34,27 +34,23 @@ export async function activate(
 
 let activeProviderDisposables: vscode.Disposable[] = [];
 
-function registerFormattingProviders(
-  context: vscode.ExtensionContext,
-  provider: ShellDocumentFormattingEditProvider
-) {
+function disposeActiveProviders() {
   for (const disposable of activeProviderDisposables) {
     disposable.dispose();
   }
   activeProviderDisposables = [];
-  const settings = vscode.workspace.getConfiguration(configurationPrefix);
-  const effectLanguages = settings.get<string[]>(ConfigItemName.EffectLanguages);
-  if (!effectLanguages) {
-    return;
-  }
-  for (const lang of effectLanguages) {
+}
+
+function registerFormattingProviders(provider: ShellDocumentFormattingEditProvider) {
+  disposeActiveProviders();
+  for (const lang of vscode.workspace.getConfiguration(configurationPrefix).get<string[]>(ConfigItemName.EffectLanguages) ?? []) {
     for (const schemae of Object.values(DocumentFilterScheme)) {
-      const disposable = vscode.languages.registerDocumentFormattingEditProvider(
-        { language: lang, scheme: schemae },
-        provider
+      activeProviderDisposables.push(
+        vscode.languages.registerDocumentFormattingEditProvider(
+          { language: lang, scheme: schemae },
+          provider
+        )
       );
-      activeProviderDisposables.push(disposable);
-      context.subscriptions.push(disposable);
     }
   }
 }
