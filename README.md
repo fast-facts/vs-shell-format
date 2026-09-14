@@ -49,6 +49,8 @@ The binary is stored in the extension folder:
 
 Examples: `shfmt_v3.14.1_linux_amd64`, `shfmt_v3.14.1_darwin_arm64`, `shfmt_v3.14.1_windows_amd64.exe`.
 
+Windows ARM64 has no official shfmt build in this pin. Set `shellformat.path` to a binary you provide.
+
 The extension starts without waiting for that download. The first format waits until the download finishes. If the download fails, set `shellformat.path`.
 
 ### Offline or manual install

@@ -213,6 +213,33 @@ suite('Downloader Tests', () => {
     );
   });
 
+  test('checkInstall shows error when platform has no shfmt build', async () => {
+    setProcess('win32', 'arm64');
+    const shown: string[] = [];
+    const originalShowErrorMessage = vscode.window.showErrorMessage;
+    vscode.window.showErrorMessage = ((message: string) => {
+      shown.push(message);
+      return Promise.resolve(undefined);
+    }) as typeof originalShowErrorMessage;
+    try {
+      const output = {
+        appendLine: () => undefined,
+        show: () => undefined,
+      } as unknown as vscode.OutputChannel;
+      await checkInstall(
+        { extensionPath: '/ext' } as vscode.ExtensionContext,
+        output,
+        null,
+        { checked: false }
+      );
+      assert.deepStrictEqual(shown, [
+        'no shfmt build for this platform, set shellformat.path',
+      ]);
+    } finally {
+      vscode.window.showErrorMessage = originalShowErrorMessage;
+    }
+  });
+
   test('too many redirects reject instead of looping forever', async () => {
     let n = 0;
     fakeFetch(() => {
