@@ -32,7 +32,7 @@ export async function verifyShfmtChecksum(destPath: string): Promise<void> {
     const filename = getPlatformFilename();
     const expected = config.shfmtChecksums[filename as keyof typeof config.shfmtChecksums];
     if (!expected) {
-      throw new Error(`unknown shfmt filename: ${filename}`);
+      throw new Error('no shfmt build for this platform, set shellformat.path');
     }
     const actual = crypto
       .createHash('sha256')
@@ -75,7 +75,7 @@ async function runDownload(srcUrl: string, destPath: string): Promise<void> {
   if (!response || response.status < 200 || response.status >= 300) {
     throw new Error(`HTTP status ${response?.status} : ${response?.statusText}`);
   }
-  if (response.headers.get('content-type') !== 'application/octet-stream') {
+  if (!response.headers.get('content-type')?.toLowerCase().startsWith('application/octet-stream')) {
     throw new Error('HTTP response does not contain an octet stream');
   }
   const body = Buffer.from(await response.arrayBuffer());
