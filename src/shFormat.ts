@@ -1,5 +1,7 @@
 import * as vscode from 'vscode';
 import * as child_process from 'child_process';
+import * as fs from 'fs';
+import * as path from 'path';
 import { fileExists, substitutePath } from './pathUtil';
 import { userOrDefaultSetting } from './userSettings';
 import { getEdits } from './diffUtils';
@@ -11,6 +13,42 @@ export const configurationPrefix = 'shellformat';
 export const output = vscode.window.createOutputChannel('shellformat');
 
 const shfmtTimeoutMs = 30000;
+const editorConfigCache = new Map<string, ReturnType<typeof editorconfig.parseSync>>();
+
+function parseEditorConfig(filePath: string): ReturnType<typeof editorconfig.parseSync> {
+  const dir = path.dirname(filePath);
+  const stamp = [dir];
+  let current = dir;
+  for (;;) {
+    try {
+      const st = fs.statSync(path.join(current, '.editorconfig'), { throwIfNoEntry: false });
+      if (st !== undefined) {
+        stamp.push(`${current}:${st.mtimeMs}`);
+      }
+    } catch (e) {
+      if (e instanceof Error) {
+        return editorconfig.parseSync(filePath);
+      }
+      throw e;
+    }
+    const parent = path.dirname(current);
+    if (parent === current) {
+      break;
+    }
+    current = parent;
+  }
+  const key = stamp.join('\0');
+  const cached = editorConfigCache.get(key);
+  if (cached) {
+    return cached;
+  }
+  const result = editorconfig.parseSync(filePath);
+  if (editorConfigCache.size >= 200) {
+    editorConfigCache.clear();
+  }
+  editorConfigCache.set(key, result);
+  return result;
+}
 
 export function runShfmt(
   command: string,
@@ -155,7 +193,7 @@ export class Formatter {
     const binPath: string | null = getSettings('path');
     const flag: string | null = getSettings('flag');
     const useEditorConfig = Boolean(settings.useEditorConfig);
-    const edcfgOptions = useEditorConfig ? editorconfig.parseSync(document.fileName) : {};
+    const edcfgOptions = useEditorConfig ? parseEditorConfig(document.fileName) : {};
     if (useEditorConfig) {
       if (flag) {
         output.appendLine('shfmt flags will be ignored as EditorConfig mode is enabled.');
