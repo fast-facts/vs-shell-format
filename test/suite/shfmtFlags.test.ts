@@ -111,6 +111,17 @@ suite('prepareShfmt', () => {
     );
   });
 
+  test('languageId dialect wins over EditorConfig shell_variant', () => {
+    assert.deepStrictEqual(
+      runFlags('script.sh', {
+        languageId: 'zsh',
+        useEditorConfig: true,
+        editorConfig: { shell_variant: 'posix' },
+      }),
+      ['--ln=zsh', '-i=4']
+    );
+  });
+
   test('EditorConfig tab indent uses -i=0', () => {
     assert.deepStrictEqual(
       runFlags('script.sh', {
