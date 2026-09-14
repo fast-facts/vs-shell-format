@@ -33,9 +33,7 @@ jobs:
       - run: npm ci
       - name: Run tests
         if: matrix.os == 'ubuntu-latest'
-        uses: GabrielBB/xvfb-action@v1.7
-        with:
-          run: npm test
+        run: xvfb-run --auto-servernum npm test
       - name: Run tests
         if: matrix.os != 'ubuntu-latest'
         run: npm test
