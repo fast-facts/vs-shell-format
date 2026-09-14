@@ -98,4 +98,22 @@ suite('shfmt parse errors become diagnostics', function () {
       await config.update('flag', undefined, vscode.ConfigurationTarget.Global);
     }
   });
+
+  test('diagnostic clears after the file is fixed', async () => {
+    const document = await vscode.workspace.openTextDocument({
+      language: 'shellscript',
+      content: 'if then\n',
+    });
+    await formatter.formatDocument(document).then(
+      () => assert.fail('format should fail on broken shell'),
+      () => undefined
+    );
+    assert.strictEqual(formatter.diagnosticCollection.get(document.uri)?.length, 1);
+    const fullRange = new vscode.Range(new vscode.Position(0, 0), new vscode.Position(1, 0));
+    const applied = new vscode.WorkspaceEdit();
+    applied.replace(document.uri, fullRange, 'echo hi\n');
+    assert.ok(await vscode.workspace.applyEdit(applied));
+    assert.deepStrictEqual(await formatter.formatDocument(document), []);
+    assert.strictEqual(formatter.diagnosticCollection.get(document.uri)?.length ?? 0, 0);
+  });
 });

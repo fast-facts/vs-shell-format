@@ -137,4 +137,27 @@ suite('Format golden files', function () {
       await config.update('useEditorConfig', undefined, vscode.ConfigurationTarget.Global);
     }
   });
+
+  test('CRLF endings survive formatting', async () => {
+    const document = await vscode.workspace.openTextDocument({
+      language: 'shellscript',
+      content: 'echo  hi\r\n',
+    });
+    assert.strictEqual(document.eol, vscode.EndOfLine.CRLF);
+    const edits = await vscode.commands.executeCommand<vscode.TextEdit[] | undefined>(
+      'vscode.executeFormatDocumentProvider',
+      document.uri,
+      { tabSize: 4, insertSpaces: true }
+    );
+    const sorted = [...(edits ?? [])].sort(
+      (a, b) => b.range.start.compareTo(a.range.start) || b.range.end.compareTo(a.range.end)
+    );
+    let result = document.getText();
+    for (const edit of sorted) {
+      const start = document.offsetAt(edit.range.start);
+      const end = document.offsetAt(edit.range.end);
+      result = result.slice(0, start) + edit.newText + result.slice(end);
+    }
+    assert.strictEqual(result, 'echo hi\r\n');
+  });
 });
