@@ -57,6 +57,17 @@ export function download2(srcUrl: string, destPath: string) {
   return pending;
 }
 
+let currentInstall: Promise<void> = Promise.resolve();
+
+export function trackInstall(work: Promise<void>): Promise<void> {
+  currentInstall = work;
+  return work;
+}
+
+export function whenInstallReady(): Promise<void> {
+  return currentInstall.catch(() => undefined);
+}
+
 async function runDownload(srcUrl: string, destPath: string): Promise<void> {
   let response: Response | undefined;
   for (let i = 0; i < MaxRedirects; ++i) {
@@ -97,11 +108,19 @@ export async function checkInstall(
   if (state.checked) {
     return;
   }
-  const destPath = getDestPath(context);
+  let destPath: string;
+  try {
+    destPath = getDestPath(context);
+  } catch (err) {
+    if (!(err instanceof Error)) {
+      throw err;
+    }
+    vscode.window.showErrorMessage(err.message);
+    return;
+  }
   await fs.promises.mkdir(path.dirname(destPath), { recursive: true });
   const needDownload = await checkNeedInstall(destPath, output, configPath, state);
   if (needDownload) {
-    output.show();
     try {
       await cleanFile(destPath);
     } catch {
@@ -122,14 +141,13 @@ export async function checkInstall(
       );
       output.appendLine(`download shfmt page: https://github.com/mvdan/sh/releases`);
       output.appendLine(`You can't use this plugin until the download is successful.`);
-      output.show();
       await download2(url, destPath);
       output.appendLine(`download success, You can use it successfully!`);
       output.appendLine('Start or issues can be submitted here https://git.io/shfmt');
     } catch (err) {
       output.appendLine(`download failed: ${err}`);
+      output.show();
     }
-    output.show();
   }
 }
 
@@ -182,7 +200,6 @@ export async function checkNeedInstall(
     return needInstall;
   } catch (err) {
     output.appendLine(`shfmt hasn't downloaded yet!` + err);
-    output.show();
     return true;
   }
 }

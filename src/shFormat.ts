@@ -7,13 +7,30 @@ import { userOrDefaultSetting } from './userSettings';
 import { getEdits } from './diffUtils';
 import * as editorconfig from 'editorconfig';
 
-import { getDestPath } from './downloader';
+import { getDestPath, whenInstallReady } from './downloader';
 import { prepareShfmt } from './shfmtFlags';
 export const configurationPrefix = 'shellformat';
 export const output = vscode.window.createOutputChannel('shellformat');
 
 const shfmtTimeoutMs = 30000;
+const TRIM_LANGUAGE_IDS: ReadonlySet<string> = new Set([
+  'dotenv',
+  'ignore',
+  'hosts',
+  'jvmoptions',
+  'properties',
+  'spring-boot-properties',
+  'azcli',
+]);
 const editorConfigCache = new Map<string, ReturnType<typeof editorconfig.parseSync>>();
+
+function trimDocument(content: string, eol: string): string {
+  const lines = content.split(eol).map(line => line.trim());
+  while (lines.length > 0 && lines[lines.length - 1] === '') {
+    lines.pop();
+  }
+  return lines.join(eol) + eol;
+}
 
 export function clearEditorConfigCache(): void {
   editorConfigCache.clear();
@@ -151,6 +168,7 @@ export class Formatter {
 
   constructor(public context: vscode.ExtensionContext) {
     this.diagnosticCollection = vscode.languages.createDiagnosticCollection('shell-format');
+    context.subscriptions.push(this.diagnosticCollection);
   }
 
   public formatDocument(
@@ -193,6 +211,13 @@ export class Formatter {
         throw err;
       }
     }
+    if (TRIM_LANGUAGE_IDS.has(document.languageId)) {
+      const result = trimDocument(content, eol);
+      this.diagnosticCollection.delete(document.uri);
+      return getEdits(document.fileName, content, result, eol).edits.map(edit =>
+        edit.apply()
+      );
+    }
     const settings = vscode.workspace.getConfiguration(configurationPrefix);
     const binPath: string | null = getSettings('path');
     const flag: string | null = getSettings('flag');
@@ -207,6 +232,7 @@ export class Formatter {
       );
     }
 
+    const dest = getDestPath(this.context);
     const prep = prepareShfmt({
       fileName: document.fileName,
       languageId: document.languageId,
@@ -214,7 +240,7 @@ export class Formatter {
       flag,
       useEditorConfig,
       editorConfig: edcfgOptions,
-      defaultCommand: getDestPath(this.context),
+      defaultCommand: dest,
       pathExists: binPath ? fileExists(binPath) : true,
       options,
     });
@@ -228,6 +254,13 @@ export class Formatter {
     }
 
     output.appendLine(`Effective shfmt flags: ${prep.flags}`);
+
+    if (prep.command === dest) {
+      await whenInstallReady();
+      if (!fileExists(prep.command)) {
+        throw new Error('set shellformat.path or wait for download');
+      }
+    }
 
     let result: string;
     try {

@@ -81,7 +81,10 @@ suite('Language list contract', function () {
   });
 
   test('activate resolves while checkInstall is still pending', async () => {
-    const installGate = new Promise<void>(() => undefined);
+    let resolveInstall: () => void = () => undefined;
+    const installGate = new Promise<void>(resolve => {
+      resolveInstall = resolve;
+    });
     let checkInstallStarted = false;
     let providerRegistrations = 0;
     const originalRegister = vscode.languages.registerDocumentFormattingEditProvider;
@@ -108,6 +111,7 @@ suite('Language list contract', function () {
         `expected providers registered, got ${providerRegistrations}`
       );
     } finally {
+      resolveInstall();
       vscode.languages.registerDocumentFormattingEditProvider = originalRegister;
       for (const d of context.subscriptions) {
         d.dispose();

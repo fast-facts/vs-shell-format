@@ -42,7 +42,7 @@ suite('userOrDefaultSetting', () => {
 });
 
 suite('getSettings integration', () => {
-  test('custom path round-trips through inspect and substitution', async () => {
+  test('custom path expands env and leaves workspace vars literal', async () => {
     const config = vscode.workspace.getConfiguration('shellformat');
     process.env.SHELLFORMAT_TEST_BIN = '/opt/shfmt';
     try {
@@ -52,6 +52,18 @@ suite('getSettings integration', () => {
         vscode.ConfigurationTarget.Global
       );
       assert.strictEqual(getSettings('path'), '/opt/shfmt');
+      await config.update(
+        'path',
+        '${workspaceFolder}/tools/shfmt',
+        vscode.ConfigurationTarget.Global
+      );
+      assert.strictEqual(getSettings('path'), '${workspaceFolder}/tools/shfmt');
+      await config.update(
+        'path',
+        '${workspaceRoot}/tools/shfmt',
+        vscode.ConfigurationTarget.Global
+      );
+      assert.strictEqual(getSettings('path'), '${workspaceRoot}/tools/shfmt');
     } finally {
       delete process.env.SHELLFORMAT_TEST_BIN;
       await config.update('path', undefined, vscode.ConfigurationTarget.Global);

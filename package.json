@@ -214,7 +214,7 @@
           "default": null,
           "scope": "application",
           "restricted": true,
-          "description": "shfmt -h to see detail usage, example: -p -bn -ci. User setting only; a workspace cannot set this."
+          "description": "Extra shfmt flags, for example -p -bn -ci. User setting only; a workspace cannot set this. Ignored when shellformat.useEditorConfig is on. Do not use -w."
         },
         "shellformat.effectLanguages": {
           "type": "array",
@@ -238,7 +238,7 @@
         "shellformat.useEditorConfig": {
           "type": "boolean",
           "default": false,
-          "description": "Use EditorConfig for shfmt configuration"
+          "description": "When on, the extension reads .editorconfig and maps keys to shfmt flags (-i, -ln, -bn, -ci, -sr, -kp, -fn). shellformat.flag is ignored."
         }
       }
     }

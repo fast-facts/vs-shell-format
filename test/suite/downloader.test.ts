@@ -1,6 +1,7 @@
 import * as assert from 'assert';
 import * as vscode from 'vscode';
 import {
+  checkInstall,
   checkNeedInstall,
   download2,
   getArchExtension,
@@ -8,7 +9,9 @@ import {
   getPlatform,
   getPlatformFilename,
   getReleaseDownloadUrl,
+  trackInstall,
   verifyShfmtChecksum,
+  whenInstallReady,
 } from '../../src/downloader';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -50,6 +53,27 @@ suite('Downloader Tests', () => {
   teardown(() => {
     globalThis.fetch = originalFetch;
     restoreProcess();
+    void trackInstall(Promise.resolve());
+  });
+
+  test('whenInstallReady does not resolve until trackInstall work settles', async () => {
+    let ready = false;
+    let resolveWork: () => void = () => undefined;
+    void trackInstall(
+      new Promise<void>(resolve => {
+        resolveWork = resolve;
+      })
+    );
+    const pending = whenInstallReady().then(() => {
+      ready = true;
+    });
+    await Promise.resolve();
+    assert.strictEqual(ready, false);
+    resolveWork();
+    await pending;
+    assert.strictEqual(ready, true);
+    void trackInstall(Promise.reject(new Error('fail'))).catch(() => undefined);
+    await whenInstallReady();
   });
 
   test('linux x64 name uses config.shfmtVersion', () => {
@@ -191,6 +215,33 @@ suite('Downloader Tests', () => {
     );
   });
 
+  test('checkInstall shows error when platform has no shfmt build', async () => {
+    setProcess('win32', 'arm64');
+    const shown: string[] = [];
+    const originalShowErrorMessage = vscode.window.showErrorMessage;
+    vscode.window.showErrorMessage = ((message: string) => {
+      shown.push(message);
+      return Promise.resolve(undefined);
+    }) as typeof originalShowErrorMessage;
+    try {
+      const output = {
+        appendLine: () => undefined,
+        show: () => undefined,
+      } as unknown as vscode.OutputChannel;
+      await checkInstall(
+        { extensionPath: '/ext' } as vscode.ExtensionContext,
+        output,
+        null,
+        { checked: false }
+      );
+      assert.deepStrictEqual(shown, [
+        'no shfmt build for this platform, set shellformat.path',
+      ]);
+    } finally {
+      vscode.window.showErrorMessage = originalShowErrorMessage;
+    }
+  });
+
   test('too many redirects reject instead of looping forever', async () => {
     let n = 0;
     fakeFetch(() => {
@@ -220,6 +271,24 @@ suite('Downloader Tests', () => {
   test('an executable custom path skips the download', async () => {
     const output = { appendLine: () => undefined, show: () => undefined } as unknown as vscode.OutputChannel;
     assert.strictEqual(await checkNeedInstall('/nonexistent-dest', output, process.execPath), false);
+  });
+
+  test('show is called when download fails', async () => {
+    fakeFetch(() => ({ statusCode: 404 }));
+    let showCalls = 0;
+    const output = {
+      appendLine: () => undefined,
+      show: () => {
+        showCalls += 1;
+      },
+    } as unknown as vscode.OutputChannel;
+    await checkInstall(
+      { extensionPath: `${__dirname}/../check-install-fail` } as vscode.ExtensionContext,
+      output,
+      null,
+      { checked: false }
+    );
+    assert.strictEqual(showCalls, 1);
   });
 
   test('install check state is not shared', async () => {

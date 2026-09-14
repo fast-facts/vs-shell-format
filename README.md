@@ -6,13 +6,7 @@
 <a href="https://marketplace.visualstudio.com/items?itemName=vs-shell-format.shell-format-secure" target="__blank"><img src="https://vsmarketplacebadges.dev/rating/vs-shell-format.shell-format-secure.svg" alt="Rating" /></a>
 <a href="https://github.com/fast-facts/vs-shell-format" target="__blank"><img src="https://github.com/fast-facts/vs-shell-format/actions/workflows/CI.yml/badge.svg" /></a>
 
-> [!Note]
->
-> This is a fork of [foxundermoon/vs-shell-format](https://github.com/foxundermoon/vs-shell-format).
->
-> Since the original package is no longer maintained, I just try to fork this package, fix this issue and re-publish new package to marketplace.
->
-> See <https://github.com/foxundermoon/vs-shell-format/issues/396>.
+This is a maintained fork of [foxundermoon/vs-shell-format](https://github.com/foxundermoon/vs-shell-format). See https://github.com/foxundermoon/vs-shell-format/issues/396.
 
 ## Supported file types or languages
 
@@ -31,7 +25,7 @@
 | mksh        | .mksh .mkshrc                                                    | mksh script files      |
 | dash        | .dash                                                            | dash / posix shell     |
 
-Shell files use [shfmt](https://github.com/mvdan/sh#shfmt). Dockerfiles use [dockerfmt](https://github.com/reteps/dockerfmt).
+Shell files use [shfmt](https://github.com/mvdan/sh#shfmt). Dockerfiles use [dockerfmt](https://github.com/reteps/dockerfmt). dotenv, ignore, hosts, properties, jvmoptions, and azcli files only trim extra spaces at the start and end of each line. They are not parsed as shell.
 
 ---
 
@@ -45,7 +39,7 @@ Shell files use [shfmt](https://github.com/mvdan/sh#shfmt). Dockerfiles use [doc
 
 ## shfmt download
 
-On first use, the extension downloads shfmt **v3.14.1** from GitHub releases. The version is pinned in `src/config.ts`. Each download is checked against a SHA-256 checksum.
+On first use, the extension downloads shfmt **v3.14.1** from GitHub releases. Each download is checked against a SHA-256 checksum.
 
 The binary is stored in the extension folder:
 
@@ -55,7 +49,9 @@ The binary is stored in the extension folder:
 
 Examples: `shfmt_v3.14.1_linux_amd64`, `shfmt_v3.14.1_darwin_arm64`, `shfmt_v3.14.1_windows_amd64.exe`.
 
-The extension starts without waiting for that download. If you format a file before it finishes, wait a moment and try again.
+Windows ARM64 has no official shfmt build in this pin. Set `shellformat.path` to a binary you provide.
+
+The extension starts without waiting for that download. The first format waits until the download finishes.
 
 ### Offline or manual install
 
@@ -67,11 +63,13 @@ You can skip the download:
 
 Or set `shellformat.path` to a shfmt binary you already have. That setting is user only. A workspace cannot set it.
 
-Checksums are checked for the automatic GitHub download.
+Only the GitHub auto-download is checksummed. A custom `shellformat.path` is not.
 
 ## EditorConfig
 
-Set `shellformat.useEditorConfig` to `true` if you want shfmt to read `.editorconfig`. When that setting is on, `shellformat.flag` is ignored. shfmt gets the file path with `--filename` and reads `.editorconfig` itself.
+Set `shellformat.useEditorConfig` to `true` to apply `.editorconfig` as shfmt flags (`-i`, `-ln`, `-bn`, `-ci`, `-sr`, `-kp`, `-fn`). `shellformat.flag` is ignored.
+
+Untitled files have no path, so EditorConfig may be empty. The editor tab size still applies in that case.
 
 When the setting is off, `shellformat.flag` and the editor tab size apply.
 
@@ -91,12 +89,12 @@ switch_case_indent = true
 - `shellformat.path`: full path to shfmt. User setting only. Example on macOS or Linux: `/usr/local/bin/shfmt`. Example on Windows: `C:\bin\shfmt.exe`.
 - `shellformat.flag`: extra shfmt flags, for example `-p -bn -ci`. User setting only. Ignored when `shellformat.useEditorConfig` is on. Do not use `-w`.
 - `shellformat.effectLanguages`: languages this formatter runs on. Default is all supported languages.
-- `shellformat.useEditorConfig`: when on, shfmt reads `.editorconfig` from the file path.
+- `shellformat.useEditorConfig`: when on, apply `.editorconfig`.
 
 ## Troubleshooting
 
 - The formatter does nothing: check `shellformat.effectLanguages`. Also open the `shellformat` output channel.
-- shfmt is missing: set `shellformat.path`, or wait for the GitHub download to finish.
+- shfmt is missing: format waits for the GitHub download. If that fails, set `shellformat.path`.
 - A red squiggle at `line:col`: shfmt found a parse error at that place.
 
 ## Privacy

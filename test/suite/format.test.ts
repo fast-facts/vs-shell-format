@@ -2,6 +2,7 @@ import * as assert from 'assert';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as vscode from 'vscode';
+import { trackInstall } from '../../src/downloader';
 import { Formatter } from '../../src/shFormat';
 
 const EXTENSION_ID = 'vs-shell-format.shell-format-secure';
@@ -96,7 +97,10 @@ suite('Format golden files', function () {
   });
 
   test('dockerfile parse failure rejects with an Error', async () => {
-    const formatter = new Formatter({ extensionPath: root } as vscode.ExtensionContext);
+    const formatter = new Formatter({
+      extensionPath: root,
+      subscriptions: [] as vscode.Disposable[],
+    } as vscode.ExtensionContext);
     const document = await vscode.workspace.openTextDocument({
       language: 'dockerfile',
       content: 'RUN echo "unclosed\n',
@@ -133,6 +137,38 @@ suite('Format golden files', function () {
     }
   });
 
+  test('format with bundled path waits for in-flight install', async () => {
+    const config = vscode.workspace.getConfiguration('shellformat');
+    await config.update('path', undefined, vscode.ConfigurationTarget.Global);
+    let resolveInstall: () => void = () => undefined;
+    void trackInstall(
+      new Promise<void>(resolve => {
+        resolveInstall = resolve;
+      })
+    );
+    const formatter = new Formatter({
+      extensionPath: path.join(root, 'no-bundled-shfmt'),
+      subscriptions: [] as vscode.Disposable[],
+    } as vscode.ExtensionContext);
+    const document = await vscode.workspace.openTextDocument({
+      language: 'shellscript',
+      content: 'echo hi\n',
+    });
+    try {
+      const formatP = formatter.formatDocumentWithContent(document.getText(), document);
+      const winner = await Promise.race([
+        formatP.then(() => 'format', () => 'format'),
+        new Promise(resolve => setTimeout(() => resolve('wait'), 50)),
+      ]);
+      assert.strictEqual(winner, 'wait');
+      resolveInstall();
+      await assert.rejects(formatP, /shellformat\.path|download/);
+    } finally {
+      resolveInstall();
+      void trackInstall(Promise.resolve());
+    }
+  });
+
   test('CRLF endings survive formatting', async () => {
     const document = await vscode.workspace.openTextDocument({
       language: 'shellscript',
@@ -140,5 +176,14 @@ suite('Format golden files', function () {
     });
     assert.strictEqual(document.eol, vscode.EndOfLine.CRLF);
     assert.strictEqual(await applyFormat(document), 'echo hi\r\n');
+  });
+
+  test('trim languages strip edge spaces and keep internal ones', async () => {
+    const formatLang = async (language: string, content: string) =>
+      formatDocument(await vscode.workspace.openTextDocument({ language, content }));
+    const ignoreOnce = await formatLang('ignore', '  *.log  \n  [Dd]ist  \n');
+    assert.strictEqual(ignoreOnce, '*.log\n[Dd]ist\n');
+    assert.strictEqual(await formatLang('ignore', ignoreOnce), ignoreOnce);
+    assert.strictEqual(await formatLang('dotenv', 'FOO=bar  baz\n'), 'FOO=bar  baz\n');
   });
 });
