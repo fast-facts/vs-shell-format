@@ -10,6 +10,20 @@
   "categories": [
     "Formatters"
   ],
+  "activationEvents": [
+    "onLanguage:shellscript",
+    "onLanguage:dotenv",
+    "onLanguage:dockerfile",
+    "onLanguage:ignore",
+    "onLanguage:hosts",
+    "onLanguage:jvmoptions",
+    "onLanguage:properties",
+    "onLanguage:azcli",
+    "onLanguage:bats",
+    "onLanguage:zsh",
+    "onLanguage:mksh",
+    "onLanguage:dash"
+  ],
   "main": "./dist/extension",
   "capabilities": {
     "documentFormattingProvider": "true",
