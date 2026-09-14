@@ -68,7 +68,7 @@ async function runDownload(srcUrl: string, destPath: string): Promise<void> {
   if (!response || response.status < 200 || response.status >= 300) {
     throw new Error(`HTTP status ${response?.status} : ${response?.statusText}`);
   }
-  if (response.headers.get('content-type') != 'application/octet-stream') {
+  if (response.headers.get('content-type') !== 'application/octet-stream') {
     throw new Error('HTTP response does not contain an octet stream');
   }
   const body = Buffer.from(await response.arrayBuffer());
@@ -96,21 +96,16 @@ enum Platform {
   unknown = 'unknown',
 }
 
+const archByNode: Partial<Record<NodeJS.Architecture, Arch>> = {
+  arm: Arch.arm,
+  arm64: Arch.arm64,
+  ia32: Arch.i386,
+  x64: Arch.x64,
+  mips: Arch.mips,
+};
+
 export function getArchExtension(): Arch {
-  switch (process.arch) {
-    case 'arm':
-      return Arch.arm;
-    case 'arm64':
-      return Arch.arm64;
-    case 'ia32':
-      return Arch.i386;
-    case 'x64':
-      return Arch.x64;
-    case 'mips':
-      return Arch.mips;
-    default:
-      return Arch.unknown;
-  }
+  return archByNode[process.arch] ?? Arch.unknown;
 }
 
 function getExecutableFileExt() {
@@ -121,27 +116,22 @@ function getExecutableFileExt() {
   }
 }
 
+const platformByNode: Partial<Record<NodeJS.Platform, Platform>> = {
+  win32: Platform.windows,
+  freebsd: Platform.freebsd,
+  openbsd: Platform.openbsd,
+  darwin: Platform.darwin,
+  linux: Platform.linux,
+};
+
 export function getPlatform(): Platform {
-  switch (process.platform) {
-    case 'win32':
-      return Platform.windows;
-    case 'freebsd':
-      return Platform.freebsd;
-    case 'openbsd':
-      return Platform.openbsd;
-    case 'darwin':
-      return Platform.darwin;
-    case 'linux':
-      return Platform.linux;
-    default:
-      return Platform.unknown;
-  }
+  return platformByNode[process.platform] ?? Platform.unknown;
 }
 
 export function getPlatformFilename() {
   const arch = getArchExtension();
   const platform = getPlatform();
-  if (arch === Arch.unknown || platform == Platform.unknown) {
+  if (arch === Arch.unknown || platform === Platform.unknown) {
     throw new Error('do not find release shfmt for your platform');
   }
   return `shfmt_${config.shfmtVersion}_${platform}_${arch}${getExecutableFileExt()}`;
@@ -173,7 +163,7 @@ export async function checkInstall(
     output.show();
     try {
       await cleanFile(destPath);
-    } catch (err) {
+    } catch {
       output.appendLine(`clean old file failed:[ ${destPath} ] ,please delete it mutual`);
       output.show();
       return;
@@ -205,8 +195,7 @@ export async function checkInstall(
 async function cleanFile(file: string) {
   try {
     await fs.promises.access(file);
-  } catch (err) {
-    // ignore
+  } catch {
     return;
   }
   await fs.promises.unlink(file);
@@ -223,7 +212,7 @@ async function checkNeedInstall(
         await fs.promises.access(configPath, fs.constants.X_OK);
         config.needCheckInstall = false;
         return false;
-      } catch (err) {
+      } catch {
         output.appendLine(
           `"shellformat.path": "${configPath}"   find config shellformat path ,but the file cannot execute or not exists, so will auto download shfmt`
         );

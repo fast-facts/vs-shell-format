@@ -12,11 +12,11 @@ export function run(): Promise<void> {
 
   return new Promise((c, e) => {
     glob('**/**.test.js', { cwd: testsRoot })
-      .then((files) => {
-        files.forEach((f) => mocha.addFile(path.resolve(testsRoot, f)));
+      .then(files => {
+        files.forEach(f => mocha.addFile(path.resolve(testsRoot, f)));
 
         try {
-          mocha.run((failures) => {
+          mocha.run(failures => {
             if (failures > 0) {
               e(new Error(`${failures} tests failed.`));
             } else {
@@ -27,7 +27,7 @@ export function run(): Promise<void> {
           e(err);
         }
       })
-      .catch((err) => {
+      .catch((err: unknown) => {
         return e(err);
       });
   });

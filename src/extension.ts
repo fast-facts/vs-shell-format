@@ -1,11 +1,11 @@
 import * as vscode from 'vscode';
 import {
-  ShellDocumentFormattingEditProvider,
-  Formatter,
-  configurationPrefix,
   ConfigItemName,
-  output,
+  configurationPrefix,
+  Formatter,
   getSettings,
+  output,
+  ShellDocumentFormattingEditProvider,
 } from './shFormat';
 
 import { checkInstall } from './downloader';

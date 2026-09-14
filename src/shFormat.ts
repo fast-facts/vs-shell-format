@@ -50,7 +50,7 @@ export class Formatter {
           spaceRedirects: false,
         });
         this.diagnosticCollection.delete(document.uri);
-        return getEdits(document.fileName, content, result).edits.map((edit) => edit.apply());
+        return getEdits(document.fileName, content, result).edits.map(edit => edit.apply());
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error);
         output.appendLine(message);
@@ -59,9 +59,9 @@ export class Formatter {
     }
     return new Promise((resolve, reject) => {
       try {
-        let settings = vscode.workspace.getConfiguration(configurationPrefix);
-        let binPath: string | null = getSettings('path');
-        let flag: string | null = getSettings('flag');
+        const settings = vscode.workspace.getConfiguration(configurationPrefix);
+        const binPath: string | null = getSettings('path');
+        const flag: string | null = getSettings('flag');
         const useEditorConfig = Boolean(settings.useEditorConfig);
         const edcfgOptions = useEditorConfig ? editorconfig.parseSync(document.fileName) : {};
         if (useEditorConfig) {
@@ -102,10 +102,10 @@ export class Formatter {
 
         output.appendLine(`Effective shfmt flags: ${prep.flags}`);
 
-        let shfmt = child_process.spawn(prep.command, prep.flags);
+        const shfmt = child_process.spawn(prep.command, prep.flags);
 
-        let shfmtOut: Buffer[] = [];
-        shfmt.stdout.on('data', (chunk) => {
+        const shfmtOut: Buffer[] = [];
+        shfmt.stdout.on('data', (chunk: Buffer | string) => {
           let bc: Buffer;
           if (chunk instanceof Buffer) {
             bc = chunk;
@@ -114,8 +114,8 @@ export class Formatter {
           }
           shfmtOut.push(bc);
         });
-        let shfmtErr: Buffer[] = [];
-        shfmt.stderr.on('data', (chunk) => {
+        const shfmtErr: Buffer[] = [];
+        shfmt.stderr.on('data', (chunk: Buffer | string) => {
           let bc: Buffer;
           if (chunk instanceof Buffer) {
             bc = chunk;
@@ -125,16 +125,16 @@ export class Formatter {
           shfmtErr.push(bc);
         });
 
-        let textEdits: vscode.TextEdit[] = [];
-        shfmt.on('close', (code) => {
-          if (code == 0) {
+        const textEdits: vscode.TextEdit[] = [];
+        shfmt.on('close', code => {
+          if (code === 0) {
             this.diagnosticCollection.delete(document.uri);
 
-            if (shfmtOut.length != 0) {
-              let result = Buffer.concat(shfmtOut).toString();
-              let filePatch = getEdits(document.fileName, content, result);
+            if (shfmtOut.length !== 0) {
+              const result = Buffer.concat(shfmtOut).toString();
+              const filePatch = getEdits(document.fileName, content, result);
 
-              filePatch.edits.forEach((edit) => {
+              filePatch.edits.forEach(edit => {
                 textEdits.push(edit.apply());
               });
 
@@ -145,15 +145,15 @@ export class Formatter {
           } else {
             let errMsg = '';
 
-            if (shfmtErr.length != 0) {
+            if (shfmtErr.length !== 0) {
               errMsg = Buffer.concat(shfmtErr).toString();
 
               // https://regex101.com/r/uPoLKg/2/
-              let errLoc = /^<standard input>:(\d+):(\d+):/.exec(errMsg);
+              const errLoc = /^<standard input>:(\d+):(\d+):/.exec(errMsg);
 
               if (errLoc !== null && errLoc.length > 2) {
-                let line = parseInt(errLoc[1]);
-                let column = parseInt(errLoc[2]);
+                const line = parseInt(errLoc[1]);
+                const column = parseInt(errLoc[2]);
 
                 const diag: vscode.Diagnostic = {
                   range: new vscode.Range(
