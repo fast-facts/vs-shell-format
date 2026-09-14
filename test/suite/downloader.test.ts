@@ -2,12 +2,12 @@ import * as assert from 'assert';
 import * as vscode from 'vscode';
 import {
   download2,
-  getReleaseDownloadUrl,
-  getPlatformFilename,
-  getDestPath,
   getArchExtension,
+  getDestPath,
   getPlatform,
-  verifyShfmtChecksum,
+  getPlatformFilename,
+  getReleaseDownloadUrl,
+  verifyShfmtChecksum
 } from '../../src/downloader';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -131,7 +131,7 @@ suite('Downloader Tests', () => {
 
   test('follows redirects', async () => {
     const seen: string[] = [];
-    fakeFetch((url) => {
+    fakeFetch(url => {
       seen.push(url);
       return seen.length === 1
         ? { statusCode: 302, headers: { location: 'https://objects.githubusercontent.com/shfmt' } }
