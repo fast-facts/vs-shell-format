@@ -129,7 +129,7 @@ export function prepareShfmt(input: PrepareShfmtInput): PrepareShfmtResult {
 
   if (userFlag) {
     const tokens = splitFlags(userFlag);
-    if (tokens.includes('-w')) {
+    if (tokens.some(t => /^-[A-Za-z]+$/.test(t) && t.includes('w'))) {
       return {
         kind: 'write-flag',
         message: 'Incompatible flag specified in shellformat.flag: -w',
