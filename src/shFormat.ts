@@ -12,7 +12,7 @@ export const output = vscode.window.createOutputChannel('shellformat');
 
 export enum ConfigItemName {
   Path = 'path',
-  EffectLanguages = 'effectLanguages'
+  EffectLanguages = 'effectLanguages',
 }
 
 export class Formatter {

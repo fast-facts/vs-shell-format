@@ -5,14 +5,14 @@ import {
   Formatter,
   getSettings,
   output,
-  ShellDocumentFormattingEditProvider
+  ShellDocumentFormattingEditProvider,
 } from './shFormat';
 
 import { checkInstall } from './downloader';
 
 export enum DocumentFilterScheme {
   File = 'file',
-  Untitled = 'untitled'
+  Untitled = 'untitled',
 }
 
 export async function activate(context: vscode.ExtensionContext) {
