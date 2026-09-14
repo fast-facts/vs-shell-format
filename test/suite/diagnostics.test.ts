@@ -37,6 +37,22 @@ suite('shfmt parse errors become diagnostics', function () {
     assert.strictEqual(diags[0].range.start.character, parseInt(errLoc[2], 10) - 1);
   });
 
+  test('error on the second line maps to a 0-based position', async () => {
+    const document = await vscode.workspace.openTextDocument({
+      language: 'shellscript',
+      content: 'echo ok\nif then\n',
+    });
+    const errMsg = await formatter.formatDocument(document).then(
+      () => assert.fail('format should fail on broken shell'),
+      (e) => (e instanceof Error ? e.message : String(e))
+    );
+    assert.ok(/^<standard input>:2:1:/.test(errMsg), `unexpected message: ${errMsg}`);
+    const diags = formatter.diagnosticCollection.get(document.uri);
+    assert.ok(diags && diags.length === 1, 'expected one diagnostic on the broken file');
+    assert.strictEqual(diags[0].range.start.line, 1);
+    assert.strictEqual(diags[0].range.start.character, 0);
+  });
+
   test('empty document formats to a single newline without diagnostics', async () => {
     const document = await vscode.workspace.openTextDocument({
       language: 'shellscript',

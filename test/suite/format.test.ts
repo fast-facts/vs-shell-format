@@ -2,6 +2,7 @@ import * as assert from 'assert';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as vscode from 'vscode';
+import { Formatter } from '../../src/shFormat';
 
 const EXTENSION_ID = 'vs-shell-format.shell-format-secure';
 
@@ -97,6 +98,18 @@ suite('Format golden files', function () {
       await formatFile(path.join(root, 'test', 'supported', 'error.sh'), 'shellscript'),
       '\n'
     );
+  });
+
+  test('dockerfile parse failure rejects with an Error', async () => {
+    const formatter = new Formatter({ extensionPath: root } as vscode.ExtensionContext);
+    const document = await vscode.workspace.openTextDocument({
+      language: 'dockerfile',
+      content: 'RUN echo "unclosed\n',
+    });
+    await assert.rejects(Promise.resolve(formatter.formatDocument(document)), (err: unknown) => {
+      assert.ok(err instanceof Error, `expected an Error, got: ${String(err)}`);
+      return true;
+    });
   });
 
   test('dockerfile keeps backslash continuations and is idempotent', async () => {

@@ -187,4 +187,19 @@ suite('prepareShfmt', () => {
       ['-i=4']
     );
   });
+
+  test('string indent_size falls back to editor tab size', () => {
+    assert.deepStrictEqual(
+      runFlags('script.sh', {
+        useEditorConfig: true,
+        editorConfig: { indent_style: 'space', indent_size: '2' },
+      }),
+      ['-i=4']
+    );
+  });
+
+  test('empty and whitespace-only flags add nothing', () => {
+    assert.deepStrictEqual(runFlags('script.sh', { flag: '' }), ['-i=4']);
+    assert.deepStrictEqual(runFlags('script.sh', { flag: '   ' }), ['-i=4']);
+  });
 });
