@@ -64,12 +64,9 @@ suite('Language list contract', function () {
     assert.strictEqual(await formatEdits('plaintext'), undefined);
   });
 
-  test('activation registers providers before the install finishes', async () => {
-    let releaseInstall!: () => void;
-    const installGate = new Promise<void>(resolve => {
-      releaseInstall = resolve;
-    });
-    let installCalled = false;
+  test('activate resolves while checkInstall is still pending', async () => {
+    const installGate = new Promise<void>(() => undefined);
+    let checkInstallStarted = false;
     let providerRegistrations = 0;
     const originalRegister = vscode.languages.registerDocumentFormattingEditProvider;
     vscode.languages.registerDocumentFormattingEditProvider = ((
@@ -83,20 +80,17 @@ suite('Language list contract', function () {
       subscriptions: [] as vscode.Disposable[],
     } as unknown as vscode.ExtensionContext;
     try {
-      const pending = activate(context, {
-        checkInstall: async () => {
-          installCalled = true;
-          await installGate;
+      await activate(context, {
+        checkInstall: () => {
+          checkInstallStarted = true;
+          return installGate;
         },
       });
-      await new Promise(resolve => setTimeout(resolve, 50));
-      assert.ok(installCalled, 'expected the install check to start');
+      assert.ok(checkInstallStarted, 'expected checkInstall to start');
       assert.ok(
         providerRegistrations >= DEFAULT_LANGUAGES.length,
         `expected providers registered, got ${providerRegistrations}`
       );
-      releaseInstall();
-      await pending;
     } finally {
       vscode.languages.registerDocumentFormattingEditProvider = originalRegister;
     }
