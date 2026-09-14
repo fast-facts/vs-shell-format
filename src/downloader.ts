@@ -119,6 +119,7 @@ export async function checkInstall(
     return;
   }
   await fs.promises.mkdir(path.dirname(destPath), { recursive: true });
+  await removeOldShfmtBinaries(destPath);
   const needDownload = await checkNeedInstall(destPath, output, configPath, state);
   if (needDownload) {
     try {
@@ -165,6 +166,38 @@ async function cleanFile(file: string) {
     return;
   }
   await fs.promises.unlink(file);
+}
+
+function isEnoent(err: unknown): boolean {
+  return typeof err === 'object' && err !== null && 'code' in err && err.code === 'ENOENT';
+}
+
+async function removeOldShfmtBinaries(destPath: string): Promise<void> {
+  const dir = path.dirname(destPath);
+  const keep = path.basename(destPath);
+  let names: string[];
+  try {
+    names = await fs.promises.readdir(dir);
+  } catch (err) {
+    if (isEnoent(err)) {
+      return;
+    }
+    throw err;
+  }
+  await Promise.all(
+    names.map(async name => {
+      if (!name.startsWith('shfmt_') || name === keep) {
+        return;
+      }
+      try {
+        await fs.promises.unlink(path.join(dir, name));
+      } catch (err) {
+        if (!isEnoent(err)) {
+          throw err;
+        }
+      }
+    })
+  );
 }
 
 export async function checkNeedInstall(
