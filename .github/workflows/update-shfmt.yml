@@ -30,7 +30,6 @@ jobs:
           cat > src/config.ts <<EOF
           export const config = {
             shfmtVersion: '$LATEST',
-            needCheckInstall: true,
             shfmtChecksums: {
           $ASSETS
             } as const,
