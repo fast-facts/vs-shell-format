@@ -84,7 +84,9 @@ suite('shfmt parse errors become diagnostics', function () {
     const applied = new vscode.WorkspaceEdit();
     applied.replace(document.uri, fullRange, 'echo hi\n');
     assert.ok(await vscode.workspace.applyEdit(applied));
-    assert.deepStrictEqual(await formatter.formatDocument(document), []);
+    const edits = await formatter.formatDocument(document);
+    assert.strictEqual(edits.length, 1);
+    assert.strictEqual(edits[0].newText, 'echo hi\n');
     assert.strictEqual(formatter.diagnosticCollection.get(document.uri)?.length ?? 0, 0);
   });
 });

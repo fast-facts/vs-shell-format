@@ -4,7 +4,6 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { fileExists, substitutePath } from './pathUtil';
 import { userOrDefaultSetting } from './userSettings';
-import { getEdits } from './diffUtils';
 import * as editorconfig from 'editorconfig';
 
 import { getDestPath, whenInstallReady } from './downloader';
@@ -141,6 +140,20 @@ export function runShfmt(
   });
 }
 
+function fullDocumentReplace(
+  document: vscode.TextDocument,
+  formatted: string
+): vscode.TextEdit[] {
+  const eol = document.eol === vscode.EndOfLine.CRLF ? '\r\n' : '\n';
+  const last = document.lineAt(document.lineCount - 1);
+  return [
+    vscode.TextEdit.replace(
+      new vscode.Range(0, 0, last.lineNumber, last.text.length),
+      formatted.split(/\r?\n/).join(eol)
+    ),
+  ];
+}
+
 export enum ConfigItemName {
   Path = 'path',
   EffectLanguages = 'effectLanguages',
@@ -159,14 +172,7 @@ export class Formatter {
     options?: vscode.FormattingOptions,
     token?: vscode.CancellationToken
   ): Thenable<vscode.TextEdit[]> {
-    const start = new vscode.Position(0, 0);
-    const end = new vscode.Position(
-      document.lineCount - 1,
-      document.lineAt(document.lineCount - 1).text.length
-    );
-    const range = new vscode.Range(start, end);
-    const content = document.getText(range);
-    return this.formatDocumentWithContent(content, document, options, token);
+    return this.formatDocumentWithContent(document.getText(), document, options, token);
   }
 
   public async formatDocumentWithContent(
@@ -175,7 +181,6 @@ export class Formatter {
     options?: vscode.FormattingOptions,
     token?: vscode.CancellationToken
   ): Promise<vscode.TextEdit[]> {
-    const eol = document.eol === vscode.EndOfLine.CRLF ? '\r\n' : '\n';
     if (document.languageId === 'dockerfile') {
       try {
         const { formatDockerfileContents } = await import('@reteps/dockerfmt');
@@ -185,9 +190,7 @@ export class Formatter {
           spaceRedirects: false,
         });
         this.diagnosticCollection.delete(document.uri);
-        return getEdits(document.fileName, content, result, eol).edits.map(edit =>
-          edit.apply()
-        );
+        return fullDocumentReplace(document, result);
       } catch (error) {
         const err = error instanceof Error ? error : new Error(String(error));
         output.appendLine(err.message);
@@ -261,11 +264,8 @@ export class Formatter {
       throw new Error(errMsg, { cause: e });
     }
 
-    if (!result) {
-      return [];
-    }
     this.diagnosticCollection.delete(document.uri);
-    return getEdits(document.fileName, content, result, eol).edits.map(edit => edit.apply());
+    return fullDocumentReplace(document, result);
   }
 }
 

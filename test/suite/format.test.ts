@@ -169,6 +169,21 @@ suite('Format golden files', function () {
     }
   });
 
+  test('format returns one full-document replace', async () => {
+    const formatter = new Formatter({
+      extensionPath: root,
+      subscriptions: [] as vscode.Disposable[],
+    } as vscode.ExtensionContext);
+    const document = await vscode.workspace.openTextDocument({
+      language: 'shellscript',
+      content: 'echo  hi\n',
+    });
+    const edits = await formatter.formatDocument(document);
+    assert.strictEqual(edits.length, 1);
+    const last = document.lineAt(document.lineCount - 1);
+    assert.ok(edits[0].range.isEqual(new vscode.Range(0, 0, last.lineNumber, last.text.length)));
+  });
+
   test('CRLF endings survive formatting', async () => {
     const document = await vscode.workspace.openTextDocument({
       language: 'shellscript',
