@@ -31,7 +31,7 @@
 | mksh        | .mksh .mkshrc                                                    | mksh script files      |
 | dash        | .dash                                                            | dash / posix shell     |
 
-Shell files use [shfmt](https://github.com/mvdan/sh#shfmt). Dockerfiles use [dockerfmt](https://github.com/reteps/dockerfmt).
+Shell files use [shfmt](https://github.com/mvdan/sh#shfmt). Dockerfiles use [dockerfmt](https://github.com/reteps/dockerfmt). dotenv, ignore, hosts, properties, jvmoptions, and azcli files only trim extra spaces at the start and end of each line. They are not parsed as shell.
 
 ---
 

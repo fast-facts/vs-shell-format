@@ -13,7 +13,24 @@ export const configurationPrefix = 'shellformat';
 export const output = vscode.window.createOutputChannel('shellformat');
 
 const shfmtTimeoutMs = 30000;
+const TRIM_LANGUAGE_IDS: ReadonlySet<string> = new Set([
+  'dotenv',
+  'ignore',
+  'hosts',
+  'jvmoptions',
+  'properties',
+  'spring-boot-properties',
+  'azcli',
+]);
 const editorConfigCache = new Map<string, ReturnType<typeof editorconfig.parseSync>>();
+
+function trimDocument(content: string, eol: string): string {
+  const lines = content.split(eol).map(line => line.trim());
+  while (lines.length > 0 && lines[lines.length - 1] === '') {
+    lines.pop();
+  }
+  return lines.join(eol) + eol;
+}
 
 export function clearEditorConfigCache(): void {
   editorConfigCache.clear();
@@ -192,6 +209,13 @@ export class Formatter {
         output.appendLine(err.message);
         throw err;
       }
+    }
+    if (TRIM_LANGUAGE_IDS.has(document.languageId)) {
+      const result = trimDocument(content, eol);
+      this.diagnosticCollection.delete(document.uri);
+      return getEdits(document.fileName, content, result, eol).edits.map(edit =>
+        edit.apply()
+      );
     }
     const settings = vscode.workspace.getConfiguration(configurationPrefix);
     const binPath: string | null = getSettings('path');

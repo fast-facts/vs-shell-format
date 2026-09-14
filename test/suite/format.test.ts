@@ -141,4 +141,13 @@ suite('Format golden files', function () {
     assert.strictEqual(document.eol, vscode.EndOfLine.CRLF);
     assert.strictEqual(await applyFormat(document), 'echo hi\r\n');
   });
+
+  test('trim languages strip edge spaces and keep internal ones', async () => {
+    const formatLang = async (language: string, content: string) =>
+      formatDocument(await vscode.workspace.openTextDocument({ language, content }));
+    const ignoreOnce = await formatLang('ignore', '  *.log  \n  [Dd]ist  \n');
+    assert.strictEqual(ignoreOnce, '*.log\n[Dd]ist\n');
+    assert.strictEqual(await formatLang('ignore', ignoreOnce), ignoreOnce);
+    assert.strictEqual(await formatLang('dotenv', 'FOO=bar  baz\n'), 'FOO=bar  baz\n');
+  });
 });
