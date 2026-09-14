@@ -5,6 +5,7 @@ import { getPlatformFilename, getReleaseDownloadUrl } from './platform';
 import * as vscode from 'vscode';
 import * as path from 'path';
 import * as child_process from 'child_process';
+import { promisify } from 'util';
 
 export * from './platform';
 
@@ -270,14 +271,14 @@ export async function checkNeedInstall(
   }
 }
 
-async function getInstalledVersion(dest: string): Promise<string> {
+export async function getInstalledVersion(dest: string, timeoutMs = 5000): Promise<string> {
   const stat = await fs.promises.stat(dest);
-  if (stat.isFile()) {
-    const v = child_process.execFileSync(dest, ['--version'], {
-      encoding: 'utf8',
-    });
-    return v.replace('\n', '');
-  } else {
+  if (!stat.isFile()) {
     throw new Error(`[${dest}] is not file`);
   }
+  const { stdout } = await promisify(child_process.execFile)(dest, ['--version'], {
+    encoding: 'utf8',
+    timeout: timeoutMs,
+  });
+  return stdout.trim();
 }
