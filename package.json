@@ -1,7 +1,7 @@
 {
   "name": "shell-format-secure",
   "displayName": "Shell-like Formatter Secure",
-  "description": "Revision of shell-format: A formatter for shell-like scripts, Dockerfile, gitignore, dotenv, /etc/hosts, jvmoptions, and other file types",
+  "description": "Formats shell scripts, Dockerfiles, gitignore, dotenv, hosts, jvmoptions, and other similar files.",
   "version": "0.0.0-semantic-release",
   "publisher": "vs-shell-format",
   "engines": {
@@ -289,10 +289,5 @@
     "diff": "^9.0.0",
     "editorconfig": "^3.0.2"
   },
-  "licenses": [
-    {
-      "type": "MIT",
-      "url": "https://www.opensource.org/licenses/mit-license.php"
-    }
-  ]
+  "license": "MIT"
 }
