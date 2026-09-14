@@ -20,6 +20,10 @@ export function runShfmt(
   timeoutMs = shfmtTimeoutMs
 ): Promise<string> {
   return new Promise((resolve, reject) => {
+    if (token?.isCancellationRequested) {
+      reject(new Error('formatting cancelled'));
+      return;
+    }
     let child: child_process.ChildProcess;
     try {
       child = child_process.spawn(command, flags);
