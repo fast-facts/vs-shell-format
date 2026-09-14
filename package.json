@@ -33,6 +33,10 @@
         "shellformat.path",
         "shellformat.flag"
       ]
+    },
+    "virtualWorkspaces": {
+      "supported": false,
+      "description": "Needs to spawn shfmt."
     }
   },
   "icon": "logo.png",

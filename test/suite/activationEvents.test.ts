@@ -77,4 +77,8 @@ suite('Activation events contract', function () {
       );
     }
   });
+
+  test('virtualWorkspaces.supported is false', () => {
+    assert.strictEqual(readManifest(root).capabilities.virtualWorkspaces.supported, false);
+  });
 });
