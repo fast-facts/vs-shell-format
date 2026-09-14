@@ -342,7 +342,9 @@ suite('Downloader Tests', () => {
       }));
       await download2('https://github.com/mvdan/sh/x', dest);
       assert.deepStrictEqual(await fs.promises.readFile(dest), body);
-      assert.strictEqual((await fs.promises.stat(dest)).mode & 0o777, 0o755);
+      if (process.platform !== 'win32') {
+        assert.strictEqual((await fs.promises.stat(dest)).mode & 0o777, 0o755);
+      }
       await assert.rejects(fs.promises.access(`${dest}.tmp`));
     } finally {
       checksums[filename] = previous;
