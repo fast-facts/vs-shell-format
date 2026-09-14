@@ -65,6 +65,9 @@ async function runDownload(srcUrl: string, destPath: string): Promise<void> {
       break;
     }
   }
+  if (response && response.status >= 300 && response.status < 400 && response.headers.get('location')) {
+    throw new Error(`too many redirects (${MaxRedirects}): ${srcUrl}`);
+  }
   if (!response || response.status < 200 || response.status >= 300) {
     throw new Error(`HTTP status ${response?.status} : ${response?.statusText}`);
   }
