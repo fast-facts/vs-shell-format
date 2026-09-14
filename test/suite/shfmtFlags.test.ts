@@ -177,8 +177,10 @@ suite('prepareShfmt', () => {
     assert.deepStrictEqual(runFlags('script.sh'), ['-i=4']);
   });
 
-  test('does not add editor tab size when -i is already set', () => {
+  test('does not add editor tab size when indent is already set', () => {
     assert.deepStrictEqual(runFlags('script.sh', { flag: '-i=2' }), ['-i=2']);
+    assert.deepStrictEqual(runFlags('script.sh', { flag: '--indent=2' }), ['--indent=2']);
+    assert.deepStrictEqual(runFlags('script.sh', { flag: '--indent 2' }), ['--indent', '2']);
   });
 
   test('uses the custom path when it exists', () => {

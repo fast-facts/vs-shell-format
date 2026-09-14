@@ -142,7 +142,7 @@ export function prepareShfmt(input: PrepareShfmtInput): PrepareShfmtResult {
         message: 'Incompatible flag specified in shellformat.flag: -w',
       };
     }
-    if (tokens.some(t => t === '-i' || t.startsWith('-i='))) {
+    if (tokens.some(t => t === '-i' || t.startsWith('-i=') || t === '--indent' || t.startsWith('--indent='))) {
       hasIndent = true;
     }
     flags.push(...tokens);
