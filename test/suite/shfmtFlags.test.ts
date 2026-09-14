@@ -6,7 +6,6 @@ const BASE: PrepareShfmtInput = {
   binPath: null,
   flag: null,
   useEditorConfig: false,
-  editorConfig: {},
   defaultCommand: '/ext/bin/shfmt',
   pathExists: true,
   options: { insertSpaces: true, tabSize: 4 },
@@ -91,38 +90,21 @@ suite('prepareShfmt', () => {
     });
   });
 
-  test('EditorConfig on maps indent and shell keys and ignores user flags', () => {
+  test('useEditorConfig with a real path passes --filename and skips editor -i', () => {
     assert.deepStrictEqual(
-      runFlags('script.sh', {
-        flag: '-p -w',
-        useEditorConfig: true,
-        editorConfig: {
-          indent_style: 'space',
-          indent_size: 2,
-          shell_variant: 'posix',
-          binary_next_line: true,
-          switch_case_indent: true,
-          space_redirects: true,
-          keep_padding: true,
-          function_next_line: true,
-        },
-      }),
-      ['-i=2', '-ln=posix', '-bn', '-ci', '-sr', '-kp', '-fn']
+      runFlags('/abs/script.sh', { useEditorConfig: true, flag: '-p -w' }),
+      ['--filename', '/abs/script.sh']
     );
   });
 
-  test('EditorConfig tab indent uses -i=0', () => {
-    assert.deepStrictEqual(
-      runFlags('script.sh', {
-        useEditorConfig: true,
-        editorConfig: { indent_style: 'tab' },
-      }),
-      ['-i=0']
-    );
+  test('useEditorConfig with untitled or empty fileName does not pass --filename', () => {
+    for (const fileName of ['Untitled-1', '']) {
+      assert.deepStrictEqual(runFlags(fileName, { useEditorConfig: true }), ['-i=4']);
+    }
   });
 
-  test('EditorConfig off keeps user flags', () => {
-    assert.deepStrictEqual(runFlags('script.sh', { flag: '-p -bn' }), ['-p', '-bn', '-i=4']);
+  test('useEditorConfig false does not pass --filename and keeps user flags', () => {
+    assert.deepStrictEqual(runFlags('/abs/script.sh', { flag: '-p -bn' }), ['-p', '-bn', '-i=4']);
   });
 
   test('uses editor tab size when no indent flag is set', () => {

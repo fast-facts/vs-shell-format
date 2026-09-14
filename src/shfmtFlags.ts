@@ -4,16 +4,6 @@ export interface PrepareShfmtInput {
   readonly binPath: string | null | undefined;
   readonly flag: string | null | undefined;
   readonly useEditorConfig: boolean;
-  readonly editorConfig: {
-    readonly indent_style?: unknown;
-    readonly indent_size?: unknown;
-    readonly shell_variant?: unknown;
-    readonly binary_next_line?: unknown;
-    readonly switch_case_indent?: unknown;
-    readonly space_redirects?: unknown;
-    readonly keep_padding?: unknown;
-    readonly function_next_line?: unknown;
-  };
   readonly defaultCommand: string;
   readonly pathExists: boolean;
   readonly options?: {
@@ -70,6 +60,9 @@ export function prepareShfmt(input: PrepareShfmtInput): PrepareShfmtResult {
   const flags: string[] = [];
   let hasIndent = false;
   const userFlag = input.useEditorConfig ? '' : (input.flag ?? '');
+  const base = input.fileName.split(/[/\\]/).pop() ?? '';
+  const passFilename =
+    input.useEditorConfig && base.length > 0 && !/^Untitled(-\d+)?$/i.test(base);
 
   const languageDialect = input.languageId ? dialectByLanguageId[input.languageId] : undefined;
   if (languageDialect) {
@@ -98,33 +91,8 @@ export function prepareShfmt(input: PrepareShfmtInput): PrepareShfmtResult {
 
   const command = input.binPath || input.defaultCommand;
 
-  if (input.useEditorConfig) {
-    const edcfg = input.editorConfig;
-    if (edcfg.indent_style === 'tab') {
-      flags.push('-i=0');
-      hasIndent = true;
-    } else if (edcfg.indent_style === 'space' && typeof edcfg.indent_size === 'number') {
-      flags.push(`-i=${edcfg.indent_size}`);
-      hasIndent = true;
-    }
-    if (typeof edcfg.shell_variant === 'string' && edcfg.shell_variant) {
-      flags.push(`-ln=${edcfg.shell_variant}`);
-    }
-    if (edcfg.binary_next_line) {
-      flags.push('-bn');
-    }
-    if (edcfg.switch_case_indent) {
-      flags.push('-ci');
-    }
-    if (edcfg.space_redirects) {
-      flags.push('-sr');
-    }
-    if (edcfg.keep_padding) {
-      flags.push('-kp');
-    }
-    if (edcfg.function_next_line) {
-      flags.push('-fn');
-    }
+  if (passFilename) {
+    flags.push('--filename', input.fileName);
   }
 
   if (userFlag) {
@@ -141,7 +109,7 @@ export function prepareShfmt(input: PrepareShfmtInput): PrepareShfmtResult {
     flags.push(...tokens);
   }
 
-  if (input.options?.insertSpaces && !hasIndent) {
+  if (input.options?.insertSpaces && !hasIndent && !passFilename) {
     flags.push(`-i=${input.options.tabSize}`);
   }
 
