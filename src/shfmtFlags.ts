@@ -75,20 +75,24 @@ export function prepareShfmt(input: PrepareShfmtInput): PrepareShfmtResult {
   let hasIndent = false;
   const userFlag = input.useEditorConfig ? '' : (input.flag ?? '');
 
-  const languageDialect = input.languageId ? dialectByLanguageId[input.languageId] : undefined;
+  let languageDialect = input.languageId ? dialectByLanguageId[input.languageId] : undefined;
   if (languageDialect) {
     flags.push(`--ln=${languageDialect}`);
   } else {
     if (/\.bats$/.test(input.fileName)) {
+      languageDialect = 'bats';
       flags.push('--ln=bats');
     }
     if (/\.(zsh|zshrc|zshenv|zprofile|zlogin|zlogout)$/.test(input.fileName)) {
+      languageDialect = 'zsh';
       flags.push('--ln=zsh');
     }
     if (/\.mksh$|\.mkshrc$/.test(input.fileName)) {
+      languageDialect = 'mksh';
       flags.push('--ln=mksh');
     }
     if (/\.dash$/.test(input.fileName)) {
+      languageDialect = 'posix';
       flags.push('--ln=posix');
     }
   }
@@ -114,7 +118,7 @@ export function prepareShfmt(input: PrepareShfmtInput): PrepareShfmtResult {
         hasIndent = true;
       }
     }
-    if (typeof edcfg.shell_variant === 'string' && edcfg.shell_variant) {
+    if (typeof edcfg.shell_variant === 'string' && edcfg.shell_variant && !languageDialect) {
       flags.push(`-ln=${edcfg.shell_variant}`);
     }
     if (isOn(edcfg.binary_next_line)) {
