@@ -1,6 +1,7 @@
 import * as assert from 'assert';
 import * as vscode from 'vscode';
 import {
+  checkNeedInstall,
   download2,
   getArchExtension,
   getDestPath,
@@ -161,5 +162,36 @@ suite('Downloader Tests', () => {
       download2('https://github.com/mvdan/sh/x', `${__dirname}/../bad-type`),
       /octet stream/
     );
+  });
+
+  test('too many redirects reject instead of looping forever', async () => {
+    let n = 0;
+    fakeFetch(() => {
+      n += 1;
+      return { statusCode: 302, headers: { location: 'https://github.com/mvdan/sh/x' } };
+    });
+    await assert.rejects(
+      download2('https://github.com/mvdan/sh/x', `${__dirname}/../redirect-loop`),
+      /HTTP status 302/
+    );
+    assert.strictEqual(n, 10);
+  });
+
+  test('a tampered binary is deleted without being executed', async function () {
+    if (process.platform === 'win32') {
+      this.skip();
+    }
+    const dest = `${__dirname}/../shfmt-trap`;
+    const marker = `${dest}.marker`;
+    await fs.promises.writeFile(dest, `#!/bin/sh\ntouch "${marker}"\n`, { mode: 0o755 });
+    const output = { appendLine: () => undefined, show: () => undefined } as unknown as vscode.OutputChannel;
+    assert.strictEqual(await checkNeedInstall(dest, output, null), true);
+    await assert.rejects(fs.promises.access(marker));
+    await assert.rejects(fs.promises.access(dest));
+  });
+
+  test('an executable custom path skips the download', async () => {
+    const output = { appendLine: () => undefined, show: () => undefined } as unknown as vscode.OutputChannel;
+    assert.strictEqual(await checkNeedInstall('/nonexistent-dest', output, process.execPath), false);
   });
 });

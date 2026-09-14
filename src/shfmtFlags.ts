@@ -1,5 +1,6 @@
 export interface PrepareShfmtInput {
   readonly fileName: string;
+  readonly languageId?: string;
   readonly binPath: string | null | undefined;
   readonly flag: string | null | undefined;
   readonly useEditorConfig: boolean;
@@ -26,22 +27,34 @@ type PrepareShfmtResult =
   { readonly kind: 'invalid-path'; readonly message: string } |
   { readonly kind: 'write-flag'; readonly message: string };
 
+const dialectByLanguageId: Record<string, string> = {
+  bats: 'bats',
+  zsh: 'zsh',
+  mksh: 'mksh',
+  dash: 'posix',
+};
+
 export function prepareShfmt(input: PrepareShfmtInput): PrepareShfmtResult {
   const flags: string[] = [];
   let hasIndent = false;
   const userFlag = input.useEditorConfig ? '' : (input.flag ?? '');
 
-  if (/\.bats$/.test(input.fileName)) {
-    flags.push('--ln=bats');
-  }
-  if (/\.(zsh|zshrc|zshenv|zprofile|zlogin|zlogout)$/.test(input.fileName)) {
-    flags.push('--ln=zsh');
-  }
-  if (/\.mksh$|\.mkshrc$/.test(input.fileName)) {
-    flags.push('--ln=mksh');
-  }
-  if (/\.dash$/.test(input.fileName)) {
-    flags.push('--ln=posix');
+  const languageDialect = input.languageId ? dialectByLanguageId[input.languageId] : undefined;
+  if (languageDialect) {
+    flags.push(`--ln=${languageDialect}`);
+  } else {
+    if (/\.bats$/.test(input.fileName)) {
+      flags.push('--ln=bats');
+    }
+    if (/\.(zsh|zshrc|zshenv|zprofile|zlogin|zlogout)$/.test(input.fileName)) {
+      flags.push('--ln=zsh');
+    }
+    if (/\.mksh$|\.mkshrc$/.test(input.fileName)) {
+      flags.push('--ln=mksh');
+    }
+    if (/\.dash$/.test(input.fileName)) {
+      flags.push('--ln=posix');
+    }
   }
 
   if (input.binPath && !input.pathExists) {
@@ -62,7 +75,7 @@ export function prepareShfmt(input: PrepareShfmtInput): PrepareShfmtResult {
       flags.push(`-i=${edcfg.indent_size}`);
       hasIndent = true;
     }
-    if (edcfg.shell_variant) {
+    if (typeof edcfg.shell_variant === 'string' && edcfg.shell_variant) {
       flags.push(`-ln=${edcfg.shell_variant}`);
     }
     if (edcfg.binary_next_line) {
@@ -83,16 +96,17 @@ export function prepareShfmt(input: PrepareShfmtInput): PrepareShfmtResult {
   }
 
   if (userFlag) {
-    if (userFlag.includes('-w')) {
+    const tokens = userFlag.split(/\s+/).filter(Boolean);
+    if (tokens.includes('-w')) {
       return {
         kind: 'write-flag',
         message: 'Incompatible flag specified in shellformat.flag: -w',
       };
     }
-    if (userFlag.includes('-i')) {
+    if (tokens.some(t => t === '-i' || t.startsWith('-i='))) {
       hasIndent = true;
     }
-    flags.push(...userFlag.split(' '));
+    flags.push(...tokens);
   }
 
   if (input.options?.insertSpaces && !hasIndent) {

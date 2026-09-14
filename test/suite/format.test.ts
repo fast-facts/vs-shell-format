@@ -2,6 +2,7 @@ import * as assert from 'assert';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as vscode from 'vscode';
+import { Formatter } from '../../src/shFormat';
 
 const EXTENSION_ID = 'vs-shell-format.shell-format-secure';
 
@@ -27,7 +28,7 @@ const CASES = [
   { name: 'sample.eclass', language: 'shellscript' },
 ] as const;
 
-async function formatDocument(document: vscode.TextDocument): Promise<string> {
+async function applyFormat(document: vscode.TextDocument): Promise<string> {
   const edits = await vscode.commands.executeCommand<vscode.TextEdit[] | undefined>(
     'vscode.executeFormatDocumentProvider',
     document.uri,
@@ -42,7 +43,11 @@ async function formatDocument(document: vscode.TextDocument): Promise<string> {
     const end = document.offsetAt(edit.range.end);
     result = result.slice(0, start) + edit.newText + result.slice(end);
   }
-  return result.replace(/\r\n/g, '\n');
+  return result;
+}
+
+async function formatDocument(document: vscode.TextDocument): Promise<string> {
+  return (await applyFormat(document)).replace(/\r\n/g, '\n');
 }
 
 async function formatFile(filePath: string, language: string): Promise<string> {
@@ -79,6 +84,29 @@ suite('Format golden files', function () {
     });
   }
 
+  test('missing trailing newline is added once and stays stable', async () => {
+    const formatShell = async (content: string): Promise<string> =>
+      formatDocument(
+        await vscode.workspace.openTextDocument({ language: 'shellscript', content })
+      );
+
+    const once = await formatShell('echo  hi');
+    assert.strictEqual(once, 'echo hi\n');
+    assert.strictEqual(await formatShell(once), once);
+  });
+
+  test('dockerfile parse failure rejects with an Error', async () => {
+    const formatter = new Formatter({ extensionPath: root } as vscode.ExtensionContext);
+    const document = await vscode.workspace.openTextDocument({
+      language: 'dockerfile',
+      content: 'RUN echo "unclosed\n',
+    });
+    await assert.rejects(Promise.resolve(formatter.formatDocument(document)), (err: unknown) => {
+      assert.ok(err instanceof Error, `expected an Error, got: ${String(err)}`);
+      return true;
+    });
+  });
+
   test('dockerfile keeps backslash continuations and is idempotent', async () => {
     const formatUntitled = async (content: string): Promise<string> =>
       formatDocument(
@@ -89,5 +117,28 @@ suite('Format golden files', function () {
     assert.ok(once.includes('\\'), 'backslash continuation must be kept');
     assert.ok(!/&&\s*$/m.test(once), 'must not strip backslash after &&');
     assert.strictEqual(await formatUntitled(once), once);
+  });
+
+  test('EditorConfig indent_size drives formatting when enabled', async () => {
+    const config = vscode.workspace.getConfiguration('shellformat');
+    await config.update('useEditorConfig', true, vscode.ConfigurationTarget.Global);
+    try {
+      const formatted = await formatFile(
+        path.join(root, 'test', 'supported', 'edcfg', 'sample.sh'),
+        'shellscript'
+      );
+      assert.strictEqual(formatted, 'if true; then\n  echo hi\nfi\n');
+    } finally {
+      await config.update('useEditorConfig', undefined, vscode.ConfigurationTarget.Global);
+    }
+  });
+
+  test('CRLF endings survive formatting', async () => {
+    const document = await vscode.workspace.openTextDocument({
+      language: 'shellscript',
+      content: 'echo  hi\r\n',
+    });
+    assert.strictEqual(document.eol, vscode.EndOfLine.CRLF);
+    assert.strictEqual(await applyFormat(document), 'echo hi\r\n');
   });
 });

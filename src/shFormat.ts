@@ -10,6 +10,95 @@ import { prepareShfmt } from './shfmtFlags';
 export const configurationPrefix = 'shellformat';
 export const output = vscode.window.createOutputChannel('shellformat');
 
+const shfmtTimeoutMs = 30000;
+
+export function runShfmt(
+  command: string,
+  flags: string[],
+  content: string,
+  token?: vscode.CancellationToken,
+  timeoutMs = shfmtTimeoutMs
+): Promise<string> {
+  return new Promise((resolve, reject) => {
+    if (token?.isCancellationRequested) {
+      reject(new Error('formatting cancelled'));
+      return;
+    }
+    let child: child_process.ChildProcess;
+    try {
+      child = child_process.spawn(command, flags);
+    } catch (e) {
+      reject(e instanceof Error ? e : new Error(String(e)));
+      return;
+    }
+    const childStdin = child.stdin;
+    const childStdout = child.stdout;
+    const childStderr = child.stderr;
+    if (!childStdin || !childStdout || !childStderr) {
+      reject(new Error(`shfmt pipes unavailable: ${command}`));
+      return;
+    }
+    let settled = false;
+    let cancelListener: vscode.Disposable | undefined;
+    const done = (fn: () => void) => {
+      if (settled) {
+        return;
+      }
+      settled = true;
+      clearTimeout(timer);
+      cancelListener?.dispose();
+      fn();
+    };
+    const timer = setTimeout(() => {
+      child.kill();
+      done(() => reject(new Error(`shfmt timed out after ${timeoutMs}ms: ${command}`)));
+    }, timeoutMs);
+    if (typeof timer.unref === 'function') {
+      timer.unref();
+    }
+    const stdoutChunks: Buffer[] = [];
+    const stderrChunks: Buffer[] = [];
+    childStdout.on('data', (chunk: Buffer | string) => {
+      stdoutChunks.push(chunk instanceof Buffer ? chunk : Buffer.from(chunk));
+    });
+    childStderr.on('data', (chunk: Buffer | string) => {
+      stderrChunks.push(chunk instanceof Buffer ? chunk : Buffer.from(chunk));
+    });
+    child.on('error', err => {
+      child.kill();
+      done(() => reject(err instanceof Error ? err : new Error(String(err))));
+    });
+    // shfmt can exit before reading stdin; the close handler reports the real error.
+    childStdin.on('error', () => undefined);
+    child.on('close', code => {
+      if (code === 0) {
+        done(() => resolve(Buffer.concat(stdoutChunks).toString()));
+      } else {
+        const errMsg =
+          Buffer.concat(stderrChunks).toString() || `shfmt exited with code ${code}`;
+        done(() => reject(new Error(errMsg)));
+      }
+    });
+    if (token) {
+      if (token.isCancellationRequested) {
+        child.kill();
+        done(() => reject(new Error('formatting cancelled')));
+      } else {
+        cancelListener = token.onCancellationRequested(() => {
+          child.kill();
+          done(() => reject(new Error('formatting cancelled')));
+        });
+      }
+    }
+    try {
+      childStdin.write(content);
+      childStdin.end();
+    } catch (e) {
+      done(() => reject(e instanceof Error ? e : new Error(String(e))));
+    }
+  });
+}
+
 export enum ConfigItemName {
   Path = 'path',
   EffectLanguages = 'effectLanguages',
@@ -24,7 +113,8 @@ export class Formatter {
 
   public formatDocument(
     document: vscode.TextDocument,
-    options?: vscode.FormattingOptions
+    options?: vscode.FormattingOptions,
+    token?: vscode.CancellationToken
   ): Thenable<vscode.TextEdit[]> {
     const start = new vscode.Position(0, 0);
     const end = new vscode.Position(
@@ -33,14 +123,16 @@ export class Formatter {
     );
     const range = new vscode.Range(start, end);
     const content = document.getText(range);
-    return this.formatDocumentWithContent(content, document, options);
+    return this.formatDocumentWithContent(content, document, options, token);
   }
 
   public async formatDocumentWithContent(
     content: string,
     document: vscode.TextDocument,
-    options?: vscode.FormattingOptions
+    options?: vscode.FormattingOptions,
+    token?: vscode.CancellationToken
   ): Promise<vscode.TextEdit[]> {
+    const eol = document.eol === vscode.EndOfLine.CRLF ? '\r\n' : '\n';
     if (document.languageId === 'dockerfile') {
       try {
         const { formatDockerfileContents } = await import('@reteps/dockerfmt');
@@ -50,135 +142,79 @@ export class Formatter {
           spaceRedirects: false,
         });
         this.diagnosticCollection.delete(document.uri);
-        return getEdits(document.fileName, content, result).edits.map(edit => edit.apply());
+        return getEdits(document.fileName, content, result, eol).edits.map(edit =>
+          edit.apply()
+        );
       } catch (error) {
-        const message = error instanceof Error ? error.message : String(error);
-        output.appendLine(message);
-        throw message;
+        const err = error instanceof Error ? error : new Error(String(error));
+        output.appendLine(err.message);
+        throw err;
       }
     }
-    return new Promise((resolve, reject) => {
-      try {
-        const settings = vscode.workspace.getConfiguration(configurationPrefix);
-        const binPath: string | null = getSettings('path');
-        const flag: string | null = getSettings('flag');
-        const useEditorConfig = Boolean(settings.useEditorConfig);
-        const edcfgOptions = useEditorConfig ? editorconfig.parseSync(document.fileName) : {};
-        if (useEditorConfig) {
-          if (flag) {
-            output.appendLine('shfmt flags will be ignored as EditorConfig mode is enabled.');
-          }
-          output.appendLine(
-            `EditorConfig for file "${document.fileName}": ${JSON.stringify(edcfgOptions)}`
-          );
-        }
-
-        const prep = prepareShfmt({
-          fileName: document.fileName,
-          binPath,
-          flag,
-          useEditorConfig,
-          editorConfig: edcfgOptions,
-          defaultCommand: getDestPath(this.context),
-          pathExists: binPath ? fileExists(binPath) : true,
-          options,
-        });
-        switch (prep.kind) {
-          case 'invalid-path':
-            vscode.window.showErrorMessage(prep.message);
-            reject(prep.message);
-            return;
-          case 'write-flag':
-            vscode.window.showWarningMessage(prep.message);
-            reject(prep.message);
-            return;
-          case 'run':
-            break;
-          default: {
-            const unused: never = prep;
-            return unused;
-          }
-        }
-
-        output.appendLine(`Effective shfmt flags: ${prep.flags}`);
-
-        const shfmt = child_process.spawn(prep.command, prep.flags);
-
-        const shfmtOut: Buffer[] = [];
-        shfmt.stdout.on('data', (chunk: Buffer | string) => {
-          let bc: Buffer;
-          if (chunk instanceof Buffer) {
-            bc = chunk;
-          } else {
-            bc = Buffer.from(chunk);
-          }
-          shfmtOut.push(bc);
-        });
-        const shfmtErr: Buffer[] = [];
-        shfmt.stderr.on('data', (chunk: Buffer | string) => {
-          let bc: Buffer;
-          if (chunk instanceof Buffer) {
-            bc = chunk;
-          } else {
-            bc = Buffer.from(chunk);
-          }
-          shfmtErr.push(bc);
-        });
-
-        const textEdits: vscode.TextEdit[] = [];
-        shfmt.on('close', code => {
-          if (code === 0) {
-            this.diagnosticCollection.delete(document.uri);
-
-            if (shfmtOut.length !== 0) {
-              const result = Buffer.concat(shfmtOut).toString();
-              const filePatch = getEdits(document.fileName, content, result);
-
-              filePatch.edits.forEach(edit => {
-                textEdits.push(edit.apply());
-              });
-
-              resolve(textEdits);
-            } else {
-              resolve([]);
-            }
-          } else {
-            let errMsg = '';
-
-            if (shfmtErr.length !== 0) {
-              errMsg = Buffer.concat(shfmtErr).toString();
-
-              // https://regex101.com/r/uPoLKg/2/
-              const errLoc = /^<standard input>:(\d+):(\d+):/.exec(errMsg);
-
-              if (errLoc !== null && errLoc.length > 2) {
-                const line = parseInt(errLoc[1]);
-                const column = parseInt(errLoc[2]);
-
-                const diag: vscode.Diagnostic = {
-                  range: new vscode.Range(
-                    new vscode.Position(line, column),
-                    new vscode.Position(line, column)
-                  ),
-                  message: errMsg.slice('<standard input>:'.length, errMsg.length),
-                  severity: vscode.DiagnosticSeverity.Error,
-                };
-
-                this.diagnosticCollection.delete(document.uri);
-                this.diagnosticCollection.set(document.uri, [diag]);
-              }
-            }
-
-            reject(errMsg);
-          }
-        });
-
-        shfmt.stdin.write(content);
-        shfmt.stdin.end();
-      } catch (e) {
-        reject(`Fatal error calling shfmt: ${e}`);
+    const settings = vscode.workspace.getConfiguration(configurationPrefix);
+    const binPath: string | null = getSettings('path');
+    const flag: string | null = getSettings('flag');
+    const useEditorConfig = Boolean(settings.useEditorConfig);
+    const edcfgOptions = useEditorConfig ? editorconfig.parseSync(document.fileName) : {};
+    if (useEditorConfig) {
+      if (flag) {
+        output.appendLine('shfmt flags will be ignored as EditorConfig mode is enabled.');
       }
+      output.appendLine(
+        `EditorConfig for file "${document.fileName}": ${JSON.stringify(edcfgOptions)}`
+      );
+    }
+
+    const prep = prepareShfmt({
+      fileName: document.fileName,
+      languageId: document.languageId,
+      binPath,
+      flag,
+      useEditorConfig,
+      editorConfig: edcfgOptions,
+      defaultCommand: getDestPath(this.context),
+      pathExists: binPath ? fileExists(binPath) : true,
+      options,
     });
+    if (prep.kind === 'invalid-path') {
+      vscode.window.showErrorMessage(prep.message);
+      throw new Error(prep.message);
+    }
+    if (prep.kind === 'write-flag') {
+      vscode.window.showWarningMessage(prep.message);
+      throw new Error(prep.message);
+    }
+
+    output.appendLine(`Effective shfmt flags: ${prep.flags}`);
+
+    let result: string;
+    try {
+      result = await runShfmt(prep.command, prep.flags, content, token);
+    } catch (e) {
+      const errMsg = e instanceof Error ? e.message : String(e);
+      const errLoc = /^<standard input>:(\d+):(\d+):/.exec(errMsg);
+      if (errLoc !== null && errLoc.length > 2) {
+        const line = Math.max(0, parseInt(errLoc[1], 10) - 1);
+        const column = Math.max(0, parseInt(errLoc[2], 10) - 1);
+        const diag: vscode.Diagnostic = {
+          range: new vscode.Range(
+            new vscode.Position(line, column),
+            new vscode.Position(line, column)
+          ),
+          message: errMsg.slice('<standard input>:'.length, errMsg.length),
+          severity: vscode.DiagnosticSeverity.Error,
+        };
+        this.diagnosticCollection.delete(document.uri);
+        this.diagnosticCollection.set(document.uri, [diag]);
+      }
+      throw new Error(errMsg, { cause: e });
+    }
+
+    if (!result) {
+      return [];
+    }
+    this.diagnosticCollection.delete(document.uri);
+    return getEdits(document.fileName, content, result, eol).edits.map(edit => edit.apply());
   }
 }
 
@@ -188,9 +224,9 @@ export class ShellDocumentFormattingEditProvider implements vscode.DocumentForma
   public provideDocumentFormattingEdits(
     document: vscode.TextDocument,
     options: vscode.FormattingOptions,
-    _token: vscode.CancellationToken
+    token: vscode.CancellationToken
   ): Thenable<vscode.TextEdit[]> {
-    return this.formatter.formatDocument(document, options);
+    return this.formatter.formatDocument(document, options, token);
   }
 }
 

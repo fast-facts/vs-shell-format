@@ -2,6 +2,7 @@ import * as assert from 'assert';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as vscode from 'vscode';
+import { activate } from '../../src/extension';
 
 const EXTENSION_ID = 'vs-shell-format.shell-format-secure';
 const DEFAULT_LANGUAGES = [
@@ -61,5 +62,51 @@ suite('Language list contract', function () {
 
   test('does not register a formatter for plaintext', async () => {
     assert.strictEqual(await formatEdits('plaintext'), undefined);
+  });
+
+  test('activation registers providers before the install finishes', async () => {
+    let releaseInstall!: () => void;
+    const installGate = new Promise<void>(resolve => {
+      releaseInstall = resolve;
+    });
+    let installCalled = false;
+    const context = {
+      subscriptions: [] as vscode.Disposable[],
+    } as unknown as vscode.ExtensionContext;
+    const pending = activate(context, {
+      checkInstall: async () => {
+        installCalled = true;
+        await installGate;
+      },
+    });
+    await new Promise(resolve => setTimeout(resolve, 50));
+    assert.ok(installCalled, 'expected the install check to start');
+    assert.ok(
+      context.subscriptions.length >= DEFAULT_LANGUAGES.length,
+      `expected providers registered, got ${context.subscriptions.length}`
+    );
+    releaseInstall();
+    await pending;
+  });
+
+  test('narrowing effectLanguages unregisters other providers live', async function () {
+    this.timeout(30000);
+    const config = vscode.workspace.getConfiguration('shellformat');
+    await config.update('effectLanguages', ['shellscript'], vscode.ConfigurationTarget.Global);
+    try {
+      const deadline = Date.now() + 10000;
+      let dockerEdits: vscode.TextEdit[] | undefined = [];
+      while (Date.now() < deadline) {
+        dockerEdits = await formatEdits('dockerfile');
+        if (dockerEdits === undefined) {
+          break;
+        }
+        await new Promise(resolve => setTimeout(resolve, 100));
+      }
+      assert.strictEqual(dockerEdits, undefined, 'dockerfile provider should be gone');
+      assert.notStrictEqual(await formatEdits('shellscript'), undefined);
+    } finally {
+      await config.update('effectLanguages', undefined, vscode.ConfigurationTarget.Global);
+    }
   });
 });

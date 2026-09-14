@@ -120,4 +120,15 @@ suite('prepareShfmt', () => {
     }
     assert.strictEqual(result.command, '/usr/bin/shfmt');
   });
+
+  test('-ci does not count as an indent flag', () => {
+    assert.deepStrictEqual(runFlags('script.sh', { flag: '-ci' }), ['-ci', '-i=4']);
+  });
+
+  test('languageId zsh covers untitled documents', () => {
+    assert.deepStrictEqual(
+      runFlags('Untitled-1', { languageId: 'zsh' }),
+      ['--ln=zsh', '-i=4']
+    );
+  });
 });

@@ -24,9 +24,10 @@ function withWorkspaceFolders(
 }
 
 suite('pathUtil', () => {
-  test('fileExists is true for a file and false for a missing path', () => {
+  test('fileExists is true for a file and false for a missing path or directory', () => {
     assert.strictEqual(fileExists(__filename), true);
     assert.strictEqual(fileExists(path.join(__dirname, 'no-such-file')), false);
+    assert.strictEqual(fileExists(__dirname), false);
   });
 
   test('substitutePath replaces workspaceFolder, workspaceRoot, and env', () => {
