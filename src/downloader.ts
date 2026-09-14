@@ -9,6 +9,8 @@ import * as child_process from 'child_process';
 export * from './platform';
 
 const MaxRedirects = 10;
+const MaxBodyBytes = 20 * 1024 * 1024;
+const DownloadTimeoutMs = 60 * 1000;
 const allowedDownloadHosts = [
   'github.com',
   'objects.githubusercontent.com',
@@ -69,30 +71,54 @@ export function whenInstallReady(): Promise<void> {
 }
 
 async function runDownload(srcUrl: string, destPath: string): Promise<void> {
-  let response: Response | undefined;
-  for (let i = 0; i < MaxRedirects; ++i) {
-    srcUrl = allowedDownloadUrl(srcUrl);
-    response = await fetch(srcUrl, { redirect: 'manual' });
-    const location = response.headers.get('location');
-    if (response.status >= 300 && response.status < 400 && location) {
-      srcUrl = new URL(location, srcUrl).href;
-    } else {
-      break;
+  const tmpPath = `${destPath}.tmp`;
+  const signal = AbortSignal.timeout(DownloadTimeoutMs);
+  try {
+    let response: Response | undefined;
+    for (let i = 0; i < MaxRedirects; ++i) {
+      srcUrl = allowedDownloadUrl(srcUrl);
+      response = await fetch(srcUrl, { redirect: 'manual', signal });
+      const location = response.headers.get('location');
+      if (response.status >= 300 && response.status < 400 && location) {
+        srcUrl = new URL(location, srcUrl).href;
+      } else {
+        break;
+      }
     }
+    if (response && response.status >= 300 && response.status < 400 && response.headers.get('location')) {
+      throw new Error(`too many redirects (${MaxRedirects}): ${srcUrl}`);
+    }
+    if (!response || response.status < 200 || response.status >= 300) {
+      throw new Error(`HTTP status ${response?.status} : ${response?.statusText}`);
+    }
+    if (!response.headers.get('content-type')?.toLowerCase().startsWith('application/octet-stream')) {
+      throw new Error('HTTP response does not contain an octet stream');
+    }
+    const n = Number(response.headers.get('content-length'));
+    if (Number.isFinite(n) && n > MaxBodyBytes) {
+      throw new Error('download too large');
+    }
+    const body = Buffer.from(await response.arrayBuffer());
+    if (body.length > MaxBodyBytes) {
+      throw new Error('download too large');
+    }
+    const file = await fs.promises.open(tmpPath, 'w', 0o644);
+    try {
+      await file.writeFile(body);
+      await file.sync();
+    } finally {
+      await file.close();
+    }
+    await verifyShfmtChecksum(tmpPath);
+    await fs.promises.rename(tmpPath, destPath);
+    await fs.promises.chmod(destPath, 0o755);
+  } catch (err) {
+    await cleanFile(tmpPath);
+    if (err instanceof Error && (err.name === 'AbortError' || err.name === 'TimeoutError')) {
+      throw new Error('download timed out', { cause: err });
+    }
+    throw err;
   }
-  if (response && response.status >= 300 && response.status < 400 && response.headers.get('location')) {
-    throw new Error(`too many redirects (${MaxRedirects}): ${srcUrl}`);
-  }
-  if (!response || response.status < 200 || response.status >= 300) {
-    throw new Error(`HTTP status ${response?.status} : ${response?.statusText}`);
-  }
-  if (!response.headers.get('content-type')?.toLowerCase().startsWith('application/octet-stream')) {
-    throw new Error('HTTP response does not contain an octet stream');
-  }
-  const body = Buffer.from(await response.arrayBuffer());
-  await fs.promises.writeFile(destPath, body, { mode: 0o644 });
-  await verifyShfmtChecksum(destPath);
-  await fs.promises.chmod(destPath, 0o755);
 }
 
 export function getDestPath(context: vscode.ExtensionContext): string {
