@@ -13,6 +13,7 @@ import {
   verifyShfmtChecksum,
   whenInstallReady,
 } from '../../src/downloader';
+import * as crypto from 'crypto';
 import * as fs from 'fs';
 import * as path from 'path';
 import { config } from '../../src/config';
@@ -36,12 +37,12 @@ function restoreProcess() {
 }
 
 function fakeFetch(
-  handler: (url: string) => { statusCode: number; headers?: Record<string, string> }
+  handler: (url: string) => { statusCode: number; headers?: Record<string, string>; body?: Buffer }
 ) {
   globalThis.fetch = (async (input: string | URL | Request) => {
     const url = typeof input === 'string' ? input : input instanceof URL ? input.href : input.url;
     const reply = handler(url);
-    return new Response(null, {
+    return new Response(reply.body ?? null, {
       status: reply.statusCode,
       statusText: String(reply.statusCode),
       headers: reply.headers,
@@ -276,5 +277,93 @@ suite('Downloader Tests', () => {
     await checkNeedInstall('/nonexistent-dest', output, process.execPath, a);
     assert.strictEqual(a.checked, true);
     assert.strictEqual(b.checked, false);
+  });
+
+  test('rejects oversize body when Content-Length is missing', async () => {
+    const dest = `${__dirname}/../oversize-body`;
+    fakeFetch(() => ({
+      statusCode: 200,
+      headers: { 'content-type': 'application/octet-stream' },
+      body: Buffer.alloc(20 * 1024 * 1024 + 1),
+    }));
+    await assert.rejects(
+      download2('https://github.com/mvdan/sh/x', dest),
+      /too large/
+    );
+    await assert.rejects(fs.promises.access(dest));
+    await assert.rejects(fs.promises.access(`${dest}.tmp`));
+  });
+
+  test('rejects too-large Content-Length before reading the body', async () => {
+    const dest = `${__dirname}/../too-large-length`;
+    fakeFetch(() => ({
+      statusCode: 200,
+      headers: {
+        'content-type': 'application/octet-stream',
+        'content-length': String(20 * 1024 * 1024 + 1),
+      },
+    }));
+    await assert.rejects(
+      download2('https://github.com/mvdan/sh/x', dest),
+      /too large/
+    );
+    await assert.rejects(fs.promises.access(dest));
+    await assert.rejects(fs.promises.access(`${dest}.tmp`));
+  });
+
+  test('abort/timeout rejects', async () => {
+    const dest = `${__dirname}/../abort-timeout`;
+    globalThis.fetch = (async (_input: string | URL | Request, init?: RequestInit) => {
+      assert.ok(init?.signal);
+      const err = new Error('The operation was aborted.');
+      err.name = 'AbortError';
+      throw err;
+    }) as typeof fetch;
+    await assert.rejects(
+      download2('https://github.com/mvdan/sh/x', dest),
+      /timed out/
+    );
+    await assert.rejects(fs.promises.access(dest));
+    await assert.rejects(fs.promises.access(`${dest}.tmp`));
+  });
+
+  test('success still writes destPath', async () => {
+    const dest = `${__dirname}/../success-dest`;
+    const body = Buffer.from('shfmt-ok');
+    const checksums = config.shfmtChecksums as unknown as Record<string, string>;
+    const filename = getPlatformFilename();
+    const previous = checksums[filename];
+    checksums[filename] = crypto.createHash('sha256').update(body).digest('hex');
+    try {
+      fakeFetch(() => ({
+        statusCode: 200,
+        headers: { 'content-type': 'application/octet-stream' },
+        body,
+      }));
+      await download2('https://github.com/mvdan/sh/x', dest);
+      assert.deepStrictEqual(await fs.promises.readFile(dest), body);
+      assert.strictEqual((await fs.promises.stat(dest)).mode & 0o777, 0o755);
+      await assert.rejects(fs.promises.access(`${dest}.tmp`));
+    } finally {
+      checksums[filename] = previous;
+      await fs.promises.unlink(dest).catch(() => undefined);
+    }
+  });
+
+  test('failed checksum does not leave destPath as the bad bytes', async () => {
+    const dest = `${__dirname}/../checksum-no-clobber`;
+    await fs.promises.writeFile(dest, 'old-bytes');
+    fakeFetch(() => ({
+      statusCode: 200,
+      headers: { 'content-type': 'application/octet-stream' },
+      body: Buffer.from('bad-bytes'),
+    }));
+    await assert.rejects(
+      download2('https://github.com/mvdan/sh/x', dest),
+      /hash mismatch/
+    );
+    assert.strictEqual(await fs.promises.readFile(dest, 'utf8'), 'old-bytes');
+    await assert.rejects(fs.promises.access(`${dest}.tmp`));
+    await fs.promises.unlink(dest);
   });
 });
