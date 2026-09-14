@@ -3,6 +3,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { activate } from '../../src/extension';
+import { getPlatformFilename } from '../../src/downloader';
 
 const EXTENSION_ID = 'vs-shell-format.shell-format-secure';
 const DEFAULT_LANGUAGES = [
@@ -20,6 +21,20 @@ const DEFAULT_LANGUAGES = [
   'mksh',
   'dash',
 ] as const;
+
+async function waitForShfmt(extensionPath: string): Promise<void> {
+  const dest = path.join(extensionPath, 'bin', getPlatformFilename());
+  const deadline = Date.now() + 50000;
+  while (Date.now() < deadline) {
+    try {
+      await fs.promises.access(dest, fs.constants.X_OK);
+      return;
+    } catch {
+      await new Promise(resolve => setTimeout(resolve, 50));
+    }
+  }
+  assert.fail(`shfmt missing at ${dest}`);
+}
 
 async function formatEdits(language: string): Promise<vscode.TextEdit[] | undefined> {
   const document = await vscode.workspace.openTextDocument({ language, content: 'echo  hello\n' });
@@ -40,6 +55,7 @@ suite('Language list contract', function () {
     assert.ok(ext, `extension ${EXTENSION_ID} is not present`);
     await ext.activate();
     root = ext.extensionPath;
+    await waitForShfmt(root);
   });
 
   test('default effectLanguages includes dockerfile and matches package.json default', () => {
@@ -93,6 +109,9 @@ suite('Language list contract', function () {
       );
     } finally {
       vscode.languages.registerDocumentFormattingEditProvider = originalRegister;
+      for (const d of context.subscriptions) {
+        d.dispose();
+      }
     }
   });
 
