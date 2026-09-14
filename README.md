@@ -6,7 +6,7 @@
 <a href="https://marketplace.visualstudio.com/items?itemName=vs-shell-format.shell-format-secure" target="__blank"><img src="https://vsmarketplacebadges.dev/rating/vs-shell-format.shell-format-secure.svg" alt="Rating" /></a>
 <a href="https://github.com/fast-facts/vs-shell-format" target="__blank"><img src="https://github.com/fast-facts/vs-shell-format/actions/workflows/CI.yml/badge.svg" /></a>
 
-This is a maintained fork of [foxundermoon/vs-shell-format](https://github.com/foxundermoon/vs-shell-format). It downloads shfmt from GitHub and checks a checksum. Dockerfiles use [dockerfmt](https://github.com/reteps/dockerfmt). zsh, mksh, and dash work too. In an untrusted workspace, the workspace cannot set `shellformat.path` or `shellformat.flag`. See https://github.com/foxundermoon/vs-shell-format/issues/396.
+This is a maintained fork of [foxundermoon/vs-shell-format](https://github.com/foxundermoon/vs-shell-format). It downloads shfmt from GitHub and checks a checksum. In an untrusted workspace, the workspace cannot set `shellformat.path` or `shellformat.flag`. See https://github.com/foxundermoon/vs-shell-format/issues/396.
 
 ## Supported file types or languages
 
@@ -87,7 +87,7 @@ switch_case_indent = true
 - `shellformat.path`: full path to shfmt. User setting only. Example on macOS or Linux: `/usr/local/bin/shfmt`. Example on Windows: `C:\bin\shfmt.exe`. This path is not checksummed.
 - `shellformat.flag`: extra shfmt flags, for example `-p -bn -ci`. User setting only. Ignored when `shellformat.useEditorConfig` is on. Do not use `-w`.
 - `shellformat.effectLanguages`: languages this formatter runs on. Default is all supported languages.
-- `shellformat.useEditorConfig`: when on, the extension reads `.editorconfig` and maps keys to shfmt flags. `shellformat.flag` is ignored.
+- `shellformat.useEditorConfig`: when on, apply `.editorconfig`. `shellformat.flag` is ignored.
 
 ## Troubleshooting
 
