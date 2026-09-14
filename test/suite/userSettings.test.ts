@@ -1,5 +1,7 @@
 import * as assert from 'assert';
+import * as vscode from 'vscode';
 import { userOrDefaultSetting } from '../../src/userSettings';
+import { getSettings } from '../../src/shFormat';
 
 suite('userOrDefaultSetting', () => {
   test('returns undefined when inspect is missing', () => {
@@ -33,5 +35,23 @@ suite('userOrDefaultSetting', () => {
       globalLanguageValue: '/opt/shfmt',
     });
     assert.strictEqual(result, '/opt/shfmt');
+  });
+});
+
+suite('getSettings integration', () => {
+  test('custom path round-trips through inspect and substitution', async () => {
+    const config = vscode.workspace.getConfiguration('shellformat');
+    process.env.SHELLFORMAT_TEST_BIN = '/opt/shfmt';
+    try {
+      await config.update(
+        'path',
+        '${env:SHELLFORMAT_TEST_BIN}',
+        vscode.ConfigurationTarget.Global
+      );
+      assert.strictEqual(getSettings('path'), '/opt/shfmt');
+    } finally {
+      delete process.env.SHELLFORMAT_TEST_BIN;
+      await config.update('path', undefined, vscode.ConfigurationTarget.Global);
+    }
   });
 });

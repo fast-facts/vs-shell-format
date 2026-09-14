@@ -66,6 +66,16 @@ suite('runShfmt', function () {
     source.dispose();
   });
 
+  test('an already-cancelled token rejects without running', async () => {
+    const source = new vscode.CancellationTokenSource();
+    source.cancel();
+    await assert.rejects(
+      runShfmt('/nonexistent-shfmt-xyz', [], 'echo hi\n', source.token),
+      /cancelled/
+    );
+    source.dispose();
+  });
+
   test('a hung child times out', async function () {
     const node = findNode();
     if (!node) {

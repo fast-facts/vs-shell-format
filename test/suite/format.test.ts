@@ -123,4 +123,18 @@ suite('Format golden files', function () {
     assert.ok(!/&&\s*$/m.test(once), 'must not strip backslash after &&');
     assert.strictEqual(await formatUntitled(once), once);
   });
+
+  test('EditorConfig indent_size drives formatting when enabled', async () => {
+    const config = vscode.workspace.getConfiguration('shellformat');
+    await config.update('useEditorConfig', true, vscode.ConfigurationTarget.Global);
+    try {
+      const formatted = await formatFile(
+        path.join(root, 'test', 'supported', 'edcfg', 'sample.sh'),
+        'shellscript'
+      );
+      assert.strictEqual(formatted, 'if true; then\n  echo hi\nfi\n');
+    } finally {
+      await config.update('useEditorConfig', undefined, vscode.ConfigurationTarget.Global);
+    }
+  });
 });
