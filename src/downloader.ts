@@ -132,7 +132,14 @@ export async function checkInstall(
       );
       output.appendLine(`download shfmt page: https://github.com/mvdan/sh/releases`);
       output.appendLine(`You can't use this plugin until the download is successful.`);
-      await download2(url, destPath);
+      await vscode.window.withProgress(
+        {
+          location: vscode.ProgressLocation.Notification,
+          title: 'Downloading shfmt',
+          cancellable: false,
+        },
+        () => download2(url, destPath)
+      );
       output.appendLine(`download success, You can use it successfully!`);
       output.appendLine('Start or issues can be submitted here https://git.io/shfmt');
     } catch (err) {
