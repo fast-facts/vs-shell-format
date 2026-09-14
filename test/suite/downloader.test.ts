@@ -172,7 +172,7 @@ suite('Downloader Tests', () => {
     });
     await assert.rejects(
       download2('https://github.com/mvdan/sh/x', `${__dirname}/../redirect-loop`),
-      /HTTP status 302/
+      /too many redirects \(10\)/
     );
     assert.strictEqual(n, 10);
   });
