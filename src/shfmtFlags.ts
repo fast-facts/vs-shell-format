@@ -34,6 +34,38 @@ const dialectByLanguageId: Record<string, string> = {
   dash: 'posix',
 };
 
+function splitFlags(raw: string): string[] {
+  const tokens: string[] = [];
+  let current = '';
+  let quote: '"' | '\'' | null = null;
+  for (const ch of raw) {
+    if (quote) {
+      if (ch === quote) {
+        quote = null;
+      } else {
+        current += ch;
+      }
+      continue;
+    }
+    if (ch === '"' || ch === '\'') {
+      quote = ch;
+      continue;
+    }
+    if (/\s/.test(ch)) {
+      if (current) {
+        tokens.push(current);
+        current = '';
+      }
+      continue;
+    }
+    current += ch;
+  }
+  if (current) {
+    tokens.push(current);
+  }
+  return tokens;
+}
+
 export function prepareShfmt(input: PrepareShfmtInput): PrepareShfmtResult {
   const flags: string[] = [];
   let hasIndent = false;
@@ -96,7 +128,7 @@ export function prepareShfmt(input: PrepareShfmtInput): PrepareShfmtResult {
   }
 
   if (userFlag) {
-    const tokens = userFlag.split(/\s+/).filter(Boolean);
+    const tokens = splitFlags(userFlag);
     if (tokens.includes('-w')) {
       return {
         kind: 'write-flag',
