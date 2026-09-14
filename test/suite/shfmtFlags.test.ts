@@ -59,8 +59,19 @@ suite('prepareShfmt', () => {
     });
   });
 
-  test('rejects -w and combined short flags that contain w', () => {
-    for (const flag of ['-p -w', '-sw', '-ws', '-wbn']) {
+  test('rejects -w, --write, and combined short flags that contain w', () => {
+    for (const flag of [
+      '-w',
+      '-p -w',
+      '-sw',
+      '-ws',
+      '-wbn',
+      '-pw',
+      '--write',
+      '--write=true',
+      '--write=false',
+      '--filename="my dir/x.sh" -w',
+    ]) {
       const result = prepareShfmt({ ...BASE, flag });
       assert.deepStrictEqual(result, {
         kind: 'write-flag',
@@ -78,17 +89,6 @@ suite('prepareShfmt', () => {
       runFlags('script.sh', { flag: '--filename="my dir/x.sh"' }),
       ['--filename=my dir/x.sh', '-i=4']
     );
-  });
-
-  test('rejects -w next to a quoted flag value', () => {
-    const result = prepareShfmt({
-      ...BASE,
-      flag: '--filename="my dir/x.sh" -w',
-    });
-    assert.deepStrictEqual(result, {
-      kind: 'write-flag',
-      message: 'Incompatible flag specified in shellformat.flag: -w',
-    });
   });
 
   test('EditorConfig on maps indent and shell keys and ignores user flags', () => {
