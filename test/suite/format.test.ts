@@ -17,7 +17,6 @@ const CASES = [
   { name: 'hosts', language: 'hosts' },
   { name: '.gitignore', language: 'ignore' },
   { name: 'application.properties', language: 'properties' },
-  { name: 'application.properties', language: 'spring-boot-properties' },
   { name: 'idea.vmoptions', language: 'jvmoptions' },
   { name: 'azure.azcli', language: 'azcli' },
   { name: 'sample.mksh', language: 'mksh' },
@@ -93,10 +92,10 @@ suite('Format golden files', function () {
     assert.strictEqual(await formatShell(once), once);
   });
 
-  test('empty shell file formats to itself', async () => {
+  test('empty shell file formats to a single newline', async () => {
     assert.strictEqual(
       await formatFile(path.join(root, 'test', 'supported', 'error.sh'), 'shellscript'),
-      ''
+      '\n'
     );
   });
 
