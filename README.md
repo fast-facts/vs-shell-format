@@ -92,7 +92,7 @@ switch_case_indent = true
 ## Troubleshooting
 
 - The formatter does nothing: check `shellformat.effectLanguages`. Also open the `shellformat` output channel.
-- shfmt is missing: format waits for the GitHub download. If that fails, set `shellformat.path`.
+- shfmt is missing: set `shellformat.path`.
 - A red squiggle at `line:col`: shfmt found a parse error at that place.
 
 ## Privacy

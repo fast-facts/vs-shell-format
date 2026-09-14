@@ -148,6 +148,7 @@ suite('Format golden files', function () {
     );
     const formatter = new Formatter({
       extensionPath: path.join(root, 'no-bundled-shfmt'),
+      subscriptions: [] as vscode.Disposable[],
     } as vscode.ExtensionContext);
     const document = await vscode.workspace.openTextDocument({
       language: 'shellscript',
