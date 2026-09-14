@@ -101,7 +101,6 @@ export async function checkInstall(
   await fs.promises.mkdir(path.dirname(destPath), { recursive: true });
   const needDownload = await checkNeedInstall(destPath, output, configPath, state);
   if (needDownload) {
-    output.show();
     try {
       await cleanFile(destPath);
     } catch {
@@ -122,14 +121,13 @@ export async function checkInstall(
       );
       output.appendLine(`download shfmt page: https://github.com/mvdan/sh/releases`);
       output.appendLine(`You can't use this plugin until the download is successful.`);
-      output.show();
       await download2(url, destPath);
       output.appendLine(`download success, You can use it successfully!`);
       output.appendLine('Start or issues can be submitted here https://git.io/shfmt');
     } catch (err) {
       output.appendLine(`download failed: ${err}`);
+      output.show();
     }
-    output.show();
   }
 }
 
@@ -182,7 +180,6 @@ export async function checkNeedInstall(
     return needInstall;
   } catch (err) {
     output.appendLine(`shfmt hasn't downloaded yet!` + err);
-    output.show();
     return true;
   }
 }
