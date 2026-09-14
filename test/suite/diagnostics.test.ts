@@ -64,4 +64,38 @@ suite('shfmt parse errors become diagnostics', function () {
     assert.strictEqual(formatter.diagnosticCollection.get(document.uri)?.length ?? 0, 0);
 
   });
+
+  test('nonexistent custom path rejects instead of formatting', async () => {
+    const config = vscode.workspace.getConfiguration('shellformat');
+    await config.update('path', '/nonexistent-shfmt-xyz', vscode.ConfigurationTarget.Global);
+    try {
+      const document = await vscode.workspace.openTextDocument({
+        language: 'shellscript',
+        content: 'echo hi\n',
+      });
+      await assert.rejects(
+        Promise.resolve(formatter.formatDocument(document)),
+        /Invalid shfmt path/
+      );
+    } finally {
+      await config.update('path', undefined, vscode.ConfigurationTarget.Global);
+    }
+  });
+
+  test('write flag rejects instead of formatting', async () => {
+    const config = vscode.workspace.getConfiguration('shellformat');
+    await config.update('flag', '-w', vscode.ConfigurationTarget.Global);
+    try {
+      const document = await vscode.workspace.openTextDocument({
+        language: 'shellscript',
+        content: 'echo hi\n',
+      });
+      await assert.rejects(
+        Promise.resolve(formatter.formatDocument(document)),
+        /Incompatible flag/
+      );
+    } finally {
+      await config.update('flag', undefined, vscode.ConfigurationTarget.Global);
+    }
+  });
 });

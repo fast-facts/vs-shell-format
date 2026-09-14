@@ -36,6 +36,24 @@ suite('userOrDefaultSetting', () => {
     });
     assert.strictEqual(result, '/opt/shfmt');
   });
+
+  test('ignores workspace language value', () => {
+    const result = userOrDefaultSetting({
+      defaultValue: null,
+      globalValue: '/usr/bin/shfmt',
+      workspaceLanguageValue: '/tmp/evil-lang',
+    });
+    assert.strictEqual(result, '/usr/bin/shfmt');
+  });
+
+  test('ignores workspace folder language value', () => {
+    const result = userOrDefaultSetting({
+      defaultValue: null,
+      globalValue: '/usr/bin/shfmt',
+      workspaceFolderLanguageValue: '/tmp/evil-folder-lang',
+    });
+    assert.strictEqual(result, '/usr/bin/shfmt');
+  });
 });
 
 suite('getSettings integration', () => {

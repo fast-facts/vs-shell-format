@@ -109,6 +109,27 @@ suite('Language list contract', function () {
     await pending;
   });
 
+  test('narrowing effectLanguages unregisters other providers live', async function () {
+    this.timeout(30000);
+    const config = vscode.workspace.getConfiguration('shellformat');
+    await config.update('effectLanguages', ['shellscript'], vscode.ConfigurationTarget.Global);
+    try {
+      const deadline = Date.now() + 10000;
+      let dockerEdits: vscode.TextEdit[] | undefined = [];
+      while (Date.now() < deadline) {
+        dockerEdits = await formatEdits('dockerfile');
+        if (dockerEdits === undefined) {
+          break;
+        }
+        await new Promise((resolve) => setTimeout(resolve, 100));
+      }
+      assert.strictEqual(dockerEdits, undefined, 'dockerfile provider should be gone');
+      assert.notStrictEqual(await formatEdits('shellscript'), undefined);
+    } finally {
+      await config.update('effectLanguages', undefined, vscode.ConfigurationTarget.Global);
+    }
+  });
+
   test('restores the real providers after these tests', async function () {
     this.timeout(60000);
     const ext = vscode.extensions.getExtension(EXTENSION_ID);
