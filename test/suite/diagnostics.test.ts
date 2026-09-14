@@ -16,7 +16,12 @@ suite('shfmt parse errors become diagnostics', function () {
     await ext.activate();
     formatter = new Formatter({
       extensionPath: ext.extensionPath,
+      subscriptions: [] as vscode.Disposable[],
     } as vscode.ExtensionContext);
+  });
+
+  test('subscribes diagnosticCollection for dispose', () => {
+    assert.ok(formatter.context.subscriptions.includes(formatter.diagnosticCollection));
   });
 
   test('format fails and sets a diagnostic from <standard input>:line:col:', async () => {
