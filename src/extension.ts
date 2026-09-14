@@ -1,18 +1,18 @@
 import * as vscode from 'vscode';
 import {
-  ShellDocumentFormattingEditProvider,
-  Formatter,
-  configurationPrefix,
   ConfigItemName,
-  output,
+  configurationPrefix,
+  Formatter,
   getSettings,
+  output,
+  ShellDocumentFormattingEditProvider
 } from './shFormat';
 
 import { checkInstall } from './downloader';
 
 export enum DocumentFilterScheme {
   File = 'file',
-  Untitled = 'untitled',
+  Untitled = 'untitled'
 }
 
 export async function activate(context: vscode.ExtensionContext) {

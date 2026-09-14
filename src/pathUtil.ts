@@ -4,14 +4,14 @@ import * as vscode from 'vscode';
 export function fileExists(filePath: string): boolean {
   try {
     return fs.statSync(filePath).isFile();
-  } catch (e) {
+  } catch {
     return false;
   }
 }
 
 export function substitutePath(filePath: string): string {
-  let workspaceFolder =
-    vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders[0].uri.fsPath;
+  const workspaceFolder =
+    vscode.workspace.workspaceFolders?.[0].uri.fsPath;
   return filePath
     .replace(/\${workspaceRoot}/g, workspaceFolder || '')
     .replace(/\${workspaceFolder}/g, workspaceFolder || '')

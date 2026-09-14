@@ -5,7 +5,7 @@ import { structuredPatch, type StructuredPatch, type StructuredPatchHunk } from 
 export enum EditTypes {
   EDIT_DELETE,
   EDIT_INSERT,
-  EDIT_REPLACE,
+  EDIT_REPLACE
 }
 
 export class Edit {
@@ -41,13 +41,13 @@ export interface FilePatch {
 }
 
 function parseUniDiffs(diffOutput: StructuredPatch[]): FilePatch[] {
-  let filePatches: FilePatch[] = [];
+  const filePatches: FilePatch[] = [];
   diffOutput.forEach((uniDiff: StructuredPatch) => {
     let edit: Edit | null = null;
-    let edits: Edit[] = [];
+    const edits: Edit[] = [];
     uniDiff.hunks.forEach((hunk: StructuredPatchHunk) => {
       let startLine = hunk.oldStart;
-      hunk.lines.forEach((line) => {
+      hunk.lines.forEach(line => {
         switch (line.slice(0, 1)) {
           case '-':
             if (edit == null) {
@@ -88,7 +88,7 @@ export function getEdits(fileName: string, oldStr: string, newStr: string): File
     oldStr = oldStr.split('\r\n').join('\n');
     newStr = newStr.split('\r\n').join('\n');
   }
-  let unifiedDiffs: StructuredPatch = structuredPatch(
+  const unifiedDiffs: StructuredPatch = structuredPatch(
     fileName,
     fileName,
     oldStr,
@@ -96,6 +96,6 @@ export function getEdits(fileName: string, oldStr: string, newStr: string): File
     '',
     ''
   );
-  let filePatches: FilePatch[] = parseUniDiffs([unifiedDiffs]);
+  const filePatches: FilePatch[] = parseUniDiffs([unifiedDiffs]);
   return filePatches[0];
 }
