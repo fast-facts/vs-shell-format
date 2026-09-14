@@ -173,8 +173,10 @@ suite('Format golden files', function () {
     if (process.platform === 'win32') {
       this.skip();
     }
+    const fake = path.join(__dirname, '..', 'empty-shfmt');
+    await fs.promises.writeFile(fake, '#!/bin/sh\nexit 0\n', { mode: 0o755 });
     const config = vscode.workspace.getConfiguration('shellformat');
-    await config.update('path', '/bin/true', vscode.ConfigurationTarget.Global);
+    await config.update('path', fake, vscode.ConfigurationTarget.Global);
     try {
       const document = await vscode.workspace.openTextDocument({
         language: 'shellscript',
