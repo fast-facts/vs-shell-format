@@ -207,6 +207,7 @@ export class Formatter {
       );
     }
 
+    const dest = getDestPath(this.context);
     const prep = prepareShfmt({
       fileName: document.fileName,
       languageId: document.languageId,
@@ -214,7 +215,7 @@ export class Formatter {
       flag,
       useEditorConfig,
       editorConfig: edcfgOptions,
-      defaultCommand: getDestPath(this.context),
+      defaultCommand: dest,
       pathExists: binPath ? fileExists(binPath) : true,
       options,
     });
@@ -229,7 +230,6 @@ export class Formatter {
 
     output.appendLine(`Effective shfmt flags: ${prep.flags}`);
 
-    const dest = getDestPath(this.context);
     if (prep.command === dest) {
       await whenInstallReady();
       if (!fileExists(prep.command)) {
