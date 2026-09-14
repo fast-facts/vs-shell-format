@@ -67,6 +67,24 @@ suite('prepareShfmt', () => {
     });
   });
 
+  test('keeps quoted flag values with spaces', () => {
+    assert.deepStrictEqual(
+      runFlags('script.sh', { flag: '--filename="my dir/x.sh"' }),
+      ['--filename=my dir/x.sh', '-i=4']
+    );
+  });
+
+  test('rejects -w next to a quoted flag value', () => {
+    const result = prepareShfmt({
+      ...BASE,
+      flag: '--filename="my dir/x.sh" -w',
+    });
+    assert.deepStrictEqual(result, {
+      kind: 'write-flag',
+      message: 'Incompatible flag specified in shellformat.flag: -w',
+    });
+  });
+
   test('EditorConfig on maps indent and shell keys and ignores user flags', () => {
     assert.deepStrictEqual(
       runFlags('script.sh', {
