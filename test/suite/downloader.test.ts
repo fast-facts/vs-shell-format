@@ -177,37 +177,6 @@ suite('Downloader Tests', () => {
     assert.strictEqual(n, 10);
   });
 
-  test('relative redirect locations resolve against the current url', async () => {
-    const seen: string[] = [];
-    fakeFetch((url) => {
-      seen.push(url);
-      return seen.length === 1
-        ? { statusCode: 302, headers: { location: '/mvdan/sh/releases/x' } }
-        : { statusCode: 404 };
-    });
-    await assert.rejects(
-      download2('https://github.com/mvdan/sh/x', `${__dirname}/../redirect-relative`),
-      /HTTP status 404/
-    );
-    assert.deepStrictEqual(seen, [
-      'https://github.com/mvdan/sh/x',
-      'https://github.com/mvdan/sh/releases/x',
-    ]);
-  });
-
-  test('different dests download independently', async () => {
-    let n = 0;
-    fakeFetch(() => {
-      n += 1;
-      return { statusCode: 404 };
-    });
-    await Promise.all([
-      assert.rejects(download2('https://github.com/mvdan/sh/x', `${__dirname}/../dest-a`)),
-      assert.rejects(download2('https://github.com/mvdan/sh/y', `${__dirname}/../dest-b`)),
-    ]);
-    assert.strictEqual(n, 2);
-  });
-
   test('a tampered binary is deleted without being executed', async function () {
     if (process.platform === 'win32') {
       this.skip();

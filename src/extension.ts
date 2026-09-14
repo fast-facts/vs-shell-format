@@ -34,14 +34,9 @@ export async function activate(
 
 let activeProviderDisposables: vscode.Disposable[] = [];
 
-export function registerFormattingProviders(
+function registerFormattingProviders(
   context: vscode.ExtensionContext,
-  provider: ShellDocumentFormattingEditProvider,
-  registrar: (
-    selector: vscode.DocumentSelector,
-    provider: vscode.DocumentFormattingEditProvider
-  ) => vscode.Disposable = (selector, editProvider) =>
-    vscode.languages.registerDocumentFormattingEditProvider(selector, editProvider)
+  provider: ShellDocumentFormattingEditProvider
 ) {
   for (const disposable of activeProviderDisposables) {
     disposable.dispose();
@@ -54,7 +49,10 @@ export function registerFormattingProviders(
   }
   for (const lang of effectLanguages) {
     for (const schemae of Object.values(DocumentFilterScheme)) {
-      const disposable = registrar({ language: lang, scheme: schemae }, provider);
+      const disposable = vscode.languages.registerDocumentFormattingEditProvider(
+        { language: lang, scheme: schemae },
+        provider
+      );
       activeProviderDisposables.push(disposable);
       context.subscriptions.push(disposable);
     }

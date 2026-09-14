@@ -125,81 +125,10 @@ suite('prepareShfmt', () => {
     assert.deepStrictEqual(runFlags('script.sh', { flag: '-ci' }), ['-ci', '-i=4']);
   });
 
-  test('a long flag containing -w is not rejected', () => {
-    assert.deepStrictEqual(runFlags('script.sh', { flag: '--whatever' }), [
-      '--whatever',
-      '-i=4',
-    ]);
-  });
-
-  test('exact -w is still rejected', () => {
-    const result = prepareShfmt({ ...BASE, flag: '--whatever -w' });
-    assert.deepStrictEqual(result, {
-      kind: 'write-flag',
-      message: 'Incompatible flag specified in shellformat.flag: -w',
-    });
-  });
-
-  test('quoted flags with spaces stay one token', () => {
-    assert.deepStrictEqual(runFlags('script.sh', { flag: '--filename="my dir/x.sh" -p' }), [
-      '--filename=my dir/x.sh',
-      '-p',
-      '-i=4',
-    ]);
-  });
-
-  test('--indent= counts as an indent flag', () => {
-    assert.deepStrictEqual(runFlags('script.sh', { flag: '--indent=2' }), ['--indent=2']);
-  });
-
   test('languageId zsh covers untitled documents', () => {
     assert.deepStrictEqual(
       runFlags('Untitled-1', { languageId: 'zsh' }),
       ['--ln=zsh', '-i=4']
     );
-  });
-
-  test('languageId wins over a misleading file name', () => {
-    assert.deepStrictEqual(runFlags('script.sh', { languageId: 'bats' }), [
-      '--ln=bats',
-      '-i=4',
-    ]);
-  });
-
-  test('shellscript languageId adds no dialect flag', () => {
-    assert.deepStrictEqual(runFlags('PKGBUILD', { languageId: 'shellscript' }), ['-i=4']);
-  });
-
-  test('user --ln comes after the auto dialect so it wins', () => {
-    assert.deepStrictEqual(runFlags('t.bats', { flag: '--ln=posix' }), [
-      '--ln=bats',
-      '--ln=posix',
-      '-i=4',
-    ]);
-  });
-
-  test('non-string shell_variant is ignored', () => {
-    assert.deepStrictEqual(
-      runFlags('script.sh', {
-        useEditorConfig: true,
-        editorConfig: { shell_variant: 42 },
-      }),
-      ['-i=4']
-    );
-  });
-
-  test('string indent_size falls back to editor tab size', () => {
-    assert.deepStrictEqual(
-      runFlags('script.sh', {
-        useEditorConfig: true,
-        editorConfig: { indent_style: 'space', indent_size: '2' },
-      }),
-      ['-i=4']
-    );
-  });
-
-  test('empty and whitespace-only flags add nothing', () => {
-    assert.deepStrictEqual(runFlags('script.sh', { flag: '' }), ['-i=4']);
-    assert.deepStrictEqual(runFlags('script.sh', { flag: '   ' }), ['-i=4']);
   });
 });

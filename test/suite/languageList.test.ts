@@ -2,8 +2,7 @@ import * as assert from 'assert';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as vscode from 'vscode';
-import { activate, registerFormattingProviders } from '../../src/extension';
-import type { ShellDocumentFormattingEditProvider } from '../../src/shFormat';
+import { activate } from '../../src/extension';
 
 const EXTENSION_ID = 'vs-shell-format.shell-format-secure';
 const DEFAULT_LANGUAGES = [
@@ -63,25 +62,6 @@ suite('Language list contract', function () {
 
   test('does not register a formatter for plaintext', async () => {
     assert.strictEqual(await formatEdits('plaintext'), undefined);
-  });
-
-  test('re-registering disposes the previous providers', () => {
-    const disposed: string[] = [];
-    let n = 0;
-    const fakeRegistrar = (selector: vscode.DocumentSelector) => {
-      const id = `${n++}:${JSON.stringify(selector)}`;
-      return { dispose: () => disposed.push(id) };
-    };
-    const context = {
-      subscriptions: [] as vscode.Disposable[],
-    } as unknown as vscode.ExtensionContext;
-    const provider = {} as ShellDocumentFormattingEditProvider;
-    registerFormattingProviders(context, provider, fakeRegistrar);
-    const perCall = n;
-    assert.ok(perCall > 0, 'expected at least one provider registration');
-    registerFormattingProviders(context, provider, fakeRegistrar);
-    assert.strictEqual(disposed.length, perCall);
-    assert.strictEqual(n, perCall * 2);
   });
 
   test('activation registers providers before the install finishes', async function () {

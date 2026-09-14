@@ -35,35 +35,11 @@ const dialectByLanguageId: Record<string, string> = {
 };
 
 function splitFlags(flag: string): string[] {
-  const tokens: string[] = [];
-  let current = '';
-  let quote: string | null = null;
-  for (const ch of flag) {
-    if (quote) {
-      if (ch === quote) {
-        quote = null;
-      } else {
-        current += ch;
-      }
-    } else if (ch === '"' || ch === "'") {
-      quote = ch;
-    } else if (/\s/.test(ch)) {
-      if (current) {
-        tokens.push(current);
-        current = '';
-      }
-    } else {
-      current += ch;
-    }
-  }
-  if (current) {
-    tokens.push(current);
-  }
-  return tokens;
+  return flag.split(/\s+/).filter(Boolean);
 }
 
 function isIndentFlag(token: string): boolean {
-  return token === '-i' || token.startsWith('-i=') || token === '--indent' || token.startsWith('--indent=');
+  return token === '-i' || token.startsWith('-i=');
 }
 
 export function prepareShfmt(input: PrepareShfmtInput): PrepareShfmtResult {

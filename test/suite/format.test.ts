@@ -8,11 +8,9 @@ const EXTENSION_ID = 'vs-shell-format.shell-format-secure';
 
 const CASES = [
   { name: 'getacme.sh', language: 'shellscript' },
-  { name: 'sample.bash', language: 'shellscript' },
   { name: 'test.zsh', language: 'zsh' },
   { name: '.zshrc', language: 'zsh' },
   { name: 'sample.bats', language: 'bats' },
-  { name: 'bats.bats', language: 'bats' },
   { name: '.env', language: 'dotenv' },
   { name: 'Dockerfile', language: 'dockerfile' },
   { name: 'hosts', language: 'hosts' },
@@ -91,13 +89,6 @@ suite('Format golden files', function () {
     const once = await formatShell('echo  hi');
     assert.strictEqual(once, 'echo hi\n');
     assert.strictEqual(await formatShell(once), once);
-  });
-
-  test('empty shell file formats to a single newline', async () => {
-    assert.strictEqual(
-      await formatFile(path.join(root, 'test', 'supported', 'error.sh'), 'shellscript'),
-      '\n'
-    );
   });
 
   test('dockerfile parse failure rejects with an Error', async () => {

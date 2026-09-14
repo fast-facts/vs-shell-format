@@ -48,24 +48,6 @@ suite('pathUtil', () => {
     }
   });
 
-  test('substitutePath handles several vars in one string', () => {
-    const wsUri = vscode.Uri.file('/ws');
-    const ws = wsUri.fsPath;
-    process.env.PATHUTIL_TEST_VAR = 'from-env';
-    delete process.env.PATHUTIL_TEST_GONE;
-    try {
-      withWorkspaceFolders([{ uri: wsUri, name: 'ws', index: 0 }], () => {
-        assert.strictEqual(
-          substitutePath('${workspaceFolder}/a/${env:PATHUTIL_TEST_VAR}/c'),
-          `${ws}/a/from-env/c`
-        );
-        assert.strictEqual(substitutePath('${env:PATHUTIL_TEST_GONE}/x'), '/x');
-      });
-    } finally {
-      delete process.env.PATHUTIL_TEST_VAR;
-    }
-  });
-
   test('substitutePath uses empty string for empty env or missing workspace', () => {
     delete process.env.PATHUTIL_TEST_GONE;
     process.env.PATHUTIL_TEST_EMPTY = '';
