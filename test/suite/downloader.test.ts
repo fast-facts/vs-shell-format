@@ -6,6 +6,7 @@ import {
   download2,
   getArchExtension,
   getDestPath,
+  getInstalledVersion,
   getPlatform,
   getPlatformFilename,
   getReleaseDownloadUrl,
@@ -459,5 +460,29 @@ suite('Downloader Tests', () => {
     assert.strictEqual(await fs.promises.readFile(dest, 'utf8'), 'old-bytes');
     await assert.rejects(fs.promises.access(`${dest}.tmp`));
     await fs.promises.unlink(dest);
+  });
+
+  test('CRLF version output matches config after trim', async function () {
+    if (process.platform === 'win32') {
+      this.skip();
+    }
+    const dest = `${__dirname}/../shfmt-crlf-version`;
+    await fs.promises.writeFile(
+      dest,
+      `#!/bin/sh\nprintf '${config.shfmtVersion}\\r\\n'\n`,
+      { mode: 0o755 }
+    );
+    assert.strictEqual(await getInstalledVersion(dest), config.shfmtVersion);
+  });
+
+  test('hung --version times out', async function () {
+    if (process.platform === 'win32') {
+      this.skip();
+    }
+    const dest = `${__dirname}/../shfmt-hung-version`;
+    await fs.promises.writeFile(dest, '#!/usr/bin/env node\nsetTimeout(() => undefined, 60000);\n', {
+      mode: 0o755,
+    });
+    await assert.rejects(getInstalledVersion(dest, 300));
   });
 });
