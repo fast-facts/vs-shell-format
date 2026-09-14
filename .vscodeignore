@@ -13,3 +13,4 @@ src/**
 test/**
 tsconfig.json
 tsconfig.test.json
+eslint.config.mjs
