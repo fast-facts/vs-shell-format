@@ -2,6 +2,7 @@ import * as assert from 'assert';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as vscode from 'vscode';
+import { trackInstall } from '../../src/downloader';
 import { Formatter } from '../../src/shFormat';
 
 const EXTENSION_ID = 'vs-shell-format.shell-format-secure';
@@ -130,6 +131,37 @@ suite('Format golden files', function () {
       assert.strictEqual(formatted, 'if true; then\n  echo hi\nfi\n');
     } finally {
       await config.update('useEditorConfig', undefined, vscode.ConfigurationTarget.Global);
+    }
+  });
+
+  test('format with bundled path waits for in-flight install', async () => {
+    const config = vscode.workspace.getConfiguration('shellformat');
+    await config.update('path', undefined, vscode.ConfigurationTarget.Global);
+    let resolveInstall: () => void = () => undefined;
+    void trackInstall(
+      new Promise<void>(resolve => {
+        resolveInstall = resolve;
+      })
+    );
+    const formatter = new Formatter({
+      extensionPath: path.join(root, 'no-bundled-shfmt'),
+    } as vscode.ExtensionContext);
+    const document = await vscode.workspace.openTextDocument({
+      language: 'shellscript',
+      content: 'echo hi\n',
+    });
+    try {
+      const formatP = formatter.formatDocumentWithContent(document.getText(), document);
+      const winner = await Promise.race([
+        formatP.then(() => 'format', () => 'format'),
+        new Promise(resolve => setTimeout(() => resolve('wait'), 50)),
+      ]);
+      assert.strictEqual(winner, 'wait');
+      resolveInstall();
+      await assert.rejects(formatP, /shellformat\.path|download/);
+    } finally {
+      resolveInstall();
+      void trackInstall(Promise.resolve());
     }
   });
 

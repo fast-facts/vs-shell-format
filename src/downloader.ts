@@ -57,6 +57,17 @@ export function download2(srcUrl: string, destPath: string) {
   return pending;
 }
 
+let currentInstall: Promise<void> = Promise.resolve();
+
+export function trackInstall(work: Promise<void>): Promise<void> {
+  currentInstall = work;
+  return work;
+}
+
+export function whenInstallReady(): Promise<void> {
+  return currentInstall.catch(() => undefined);
+}
+
 async function runDownload(srcUrl: string, destPath: string): Promise<void> {
   let response: Response | undefined;
   for (let i = 0; i < MaxRedirects; ++i) {

@@ -55,7 +55,7 @@ The binary is stored in the extension folder:
 
 Examples: `shfmt_v3.14.1_linux_amd64`, `shfmt_v3.14.1_darwin_arm64`, `shfmt_v3.14.1_windows_amd64.exe`.
 
-The extension starts without waiting for that download. If you format a file before it finishes, wait a moment and try again.
+The extension starts without waiting for that download. The first format waits until the download finishes. If the download fails, set `shellformat.path`.
 
 ### Offline or manual install
 
@@ -96,7 +96,7 @@ switch_case_indent = true
 ## Troubleshooting
 
 - The formatter does nothing: check `shellformat.effectLanguages`. Also open the `shellformat` output channel.
-- shfmt is missing: set `shellformat.path`, or wait for the GitHub download to finish.
+- shfmt is missing: format waits for the GitHub download. If that fails, set `shellformat.path`.
 - A red squiggle at `line:col`: shfmt found a parse error at that place.
 
 ## Privacy

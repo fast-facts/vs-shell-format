@@ -8,7 +8,9 @@ import {
   getPlatform,
   getPlatformFilename,
   getReleaseDownloadUrl,
+  trackInstall,
   verifyShfmtChecksum,
+  whenInstallReady,
 } from '../../src/downloader';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -50,6 +52,25 @@ suite('Downloader Tests', () => {
   teardown(() => {
     globalThis.fetch = originalFetch;
     restoreProcess();
+  });
+
+  test('whenInstallReady does not resolve until trackInstall work settles', async () => {
+    let ready = false;
+    let resolveWork: () => void = () => undefined;
+    void trackInstall(
+      new Promise<void>(resolve => {
+        resolveWork = resolve;
+      })
+    );
+    const pending = whenInstallReady().then(() => {
+      ready = true;
+    });
+    await Promise.resolve();
+    assert.strictEqual(ready, false);
+    resolveWork();
+    await pending;
+    assert.strictEqual(ready, true);
+    void trackInstall(Promise.resolve());
   });
 
   test('linux x64 name uses config.shfmtVersion', () => {
