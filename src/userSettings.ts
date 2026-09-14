@@ -1,4 +1,4 @@
-export type ExecutableInspect<T> = {
+export interface ExecutableInspect<T> {
   readonly defaultValue?: T;
   readonly globalValue?: T;
   readonly globalLanguageValue?: T;
@@ -6,7 +6,7 @@ export type ExecutableInspect<T> = {
   readonly workspaceFolderValue?: T;
   readonly workspaceLanguageValue?: T;
   readonly workspaceFolderLanguageValue?: T;
-};
+}
 
 export function userOrDefaultSetting<T>(
   inspected: ExecutableInspect<T> | undefined

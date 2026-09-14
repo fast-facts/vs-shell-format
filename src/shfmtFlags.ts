@@ -1,4 +1,4 @@
-export type PrepareShfmtInput = {
+export interface PrepareShfmtInput {
   readonly fileName: string;
   readonly binPath: string | null | undefined;
   readonly flag: string | null | undefined;
@@ -19,12 +19,12 @@ export type PrepareShfmtInput = {
     readonly insertSpaces?: boolean;
     readonly tabSize?: number;
   };
-};
+}
 
 type PrepareShfmtResult =
-  | { readonly kind: 'run'; readonly command: string; readonly flags: string[] }
-  | { readonly kind: 'invalid-path'; readonly message: string }
-  | { readonly kind: 'write-flag'; readonly message: string };
+  | { readonly kind: 'run'; readonly command: string; readonly flags: string[] } |
+  { readonly kind: 'invalid-path'; readonly message: string } |
+  { readonly kind: 'write-flag'; readonly message: string };
 
 export function prepareShfmt(input: PrepareShfmtInput): PrepareShfmtResult {
   const flags: string[] = [];
