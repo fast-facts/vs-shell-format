@@ -31,7 +31,8 @@ suite('shfmt parse errors become diagnostics', function () {
     const errLoc = /^<standard input>:(\d+):(\d+):/.exec(errMsg);
     assert.ok(errLoc, `expected <standard input>:line:col: in: ${errMsg}`);
     const diags = formatter.diagnosticCollection.get(document.uri);
-    assert.ok(diags && diags.length === 1, 'expected one diagnostic on the broken file');
+    assert.ok(diags);
+    assert.strictEqual(diags.length, 1, 'expected one diagnostic on the broken file');
     assert.strictEqual(diags[0].range.start.line, parseInt(errLoc[1], 10));
     assert.strictEqual(diags[0].range.start.character, parseInt(errLoc[2], 10));
   });
