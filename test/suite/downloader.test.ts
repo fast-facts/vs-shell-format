@@ -158,8 +158,14 @@ suite('Downloader Tests', () => {
   });
 
   test('rejects blocked download urls', async () => {
+    let n = 0;
+    fakeFetch(() => {
+      n += 1;
+      return { statusCode: 200 };
+    });
     await assert.rejects(download2('http://github.com/x', `${__dirname}/../blocked-http`));
     await assert.rejects(download2('https://evil.example/x', `${__dirname}/../blocked-host`));
+    assert.strictEqual(n, 0);
   });
 
   test('hash mismatch rejects', async () => {
