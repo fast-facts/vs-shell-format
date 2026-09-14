@@ -59,12 +59,18 @@ suite('prepareShfmt', () => {
     });
   });
 
-  test('rejects -w and does not return a command', () => {
-    const result = prepareShfmt({ ...BASE, flag: '-p -w' });
-    assert.deepStrictEqual(result, {
-      kind: 'write-flag',
-      message: 'Incompatible flag specified in shellformat.flag: -w',
-    });
+  test('rejects -w and combined short flags that contain w', () => {
+    for (const flag of ['-p -w', '-sw', '-ws', '-wbn']) {
+      const result = prepareShfmt({ ...BASE, flag });
+      assert.deepStrictEqual(result, {
+        kind: 'write-flag',
+        message: 'Incompatible flag specified in shellformat.flag: -w',
+      });
+    }
+  });
+
+  test('does not reject --whatever as a write flag', () => {
+    assert.deepStrictEqual(runFlags('script.sh', { flag: '--whatever' }), ['--whatever', '-i=4']);
   });
 
   test('keeps quoted flag values with spaces', () => {
