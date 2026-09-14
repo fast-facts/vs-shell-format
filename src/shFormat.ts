@@ -15,7 +15,11 @@ export const output = vscode.window.createOutputChannel('shellformat');
 const shfmtTimeoutMs = 30000;
 const editorConfigCache = new Map<string, ReturnType<typeof editorconfig.parseSync>>();
 
-function parseEditorConfig(filePath: string): ReturnType<typeof editorconfig.parseSync> {
+export function clearEditorConfigCache(): void {
+  editorConfigCache.clear();
+}
+
+export function parseEditorConfig(filePath: string): ReturnType<typeof editorconfig.parseSync> {
   const dir = path.dirname(filePath);
   const stamp = [dir];
   let current = dir;
