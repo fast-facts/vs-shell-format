@@ -20,6 +20,7 @@ import { config } from '../../src/config';
 const originalPlatform = Object.getOwnPropertyDescriptor(process, 'platform');
 const originalArch = Object.getOwnPropertyDescriptor(process, 'arch');
 const originalFetch = globalThis.fetch;
+const originalWithProgress = Object.getOwnPropertyDescriptor(vscode.window, 'withProgress');
 
 function setProcess(platform: string, arch: string) {
   Object.defineProperty(process, 'platform', { value: platform, configurable: true });
@@ -33,6 +34,16 @@ function restoreProcess() {
   if (originalArch) {
     Object.defineProperty(process, 'arch', originalArch);
   }
+}
+
+function stubWithProgress(): vscode.ProgressOptions[] {
+  const calls: vscode.ProgressOptions[] = [];
+  const stub: typeof vscode.window.withProgress = (options, task) => {
+    calls.push(options);
+    return task({ report: () => undefined }, new vscode.CancellationTokenSource().token);
+  };
+  Object.defineProperty(vscode.window, 'withProgress', { configurable: true, value: stub });
+  return calls;
 }
 
 function fakeFetch(
@@ -53,6 +64,9 @@ suite('Downloader Tests', () => {
   teardown(() => {
     globalThis.fetch = originalFetch;
     restoreProcess();
+    if (originalWithProgress) {
+      Object.defineProperty(vscode.window, 'withProgress', originalWithProgress);
+    }
   });
 
   test('whenInstallReady does not resolve until trackInstall work settles', async () => {
@@ -276,6 +290,33 @@ suite('Downloader Tests', () => {
     } as unknown as vscode.OutputChannel;
     assert.strictEqual(await checkNeedInstall('/nonexistent-dest', output, process.execPath), false);
     assert.strictEqual(showCalls, 0);
+  });
+
+  test('withProgress is used on the download path', async () => {
+    fakeFetch(() => ({ statusCode: 404 }));
+    const calls = stubWithProgress();
+    const output = { appendLine: () => undefined, show: () => undefined } as unknown as vscode.OutputChannel;
+    await checkInstall(
+      { extensionPath: `${__dirname}/../check-install-progress` } as vscode.ExtensionContext,
+      output,
+      null,
+      { checked: false }
+    );
+    assert.strictEqual(calls.length, 1);
+    assert.strictEqual(calls[0].location, vscode.ProgressLocation.Notification);
+    assert.strictEqual(calls[0].cancellable, false);
+  });
+
+  test('withProgress is not used on the skip-download path', async () => {
+    const calls = stubWithProgress();
+    const output = { appendLine: () => undefined, show: () => undefined } as unknown as vscode.OutputChannel;
+    await checkInstall(
+      { extensionPath: `${__dirname}/../check-install-skip-progress` } as vscode.ExtensionContext,
+      output,
+      process.execPath,
+      { checked: false }
+    );
+    assert.strictEqual(calls.length, 0);
   });
 
   test('show is called when download fails', async () => {
