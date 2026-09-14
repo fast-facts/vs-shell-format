@@ -108,7 +108,16 @@ export async function checkInstall(
   if (state.checked) {
     return;
   }
-  const destPath = getDestPath(context);
+  let destPath: string;
+  try {
+    destPath = getDestPath(context);
+  } catch (err) {
+    if (!(err instanceof Error)) {
+      throw err;
+    }
+    vscode.window.showErrorMessage(err.message);
+    return;
+  }
   await fs.promises.mkdir(path.dirname(destPath), { recursive: true });
   const needDownload = await checkNeedInstall(destPath, output, configPath, state);
   if (needDownload) {
