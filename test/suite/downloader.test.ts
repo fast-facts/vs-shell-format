@@ -164,6 +164,33 @@ suite('Downloader Tests', () => {
     );
   });
 
+  test('accepts octet-stream content-type with charset', async () => {
+    fakeFetch(() => ({
+      statusCode: 200,
+      headers: { 'content-type': 'application/octet-stream; charset=utf-8' },
+    }));
+    await assert.rejects(
+      download2('https://github.com/mvdan/sh/x', `${__dirname}/../charset-type`),
+      /hash mismatch/
+    );
+  });
+
+  test('rejects missing content-type', async () => {
+    fakeFetch(() => ({ statusCode: 200 }));
+    await assert.rejects(
+      download2('https://github.com/mvdan/sh/x', `${__dirname}/../missing-type`),
+      /octet stream/
+    );
+  });
+
+  test('windows arm64 has no shfmt build', () => {
+    setProcess('win32', 'arm64');
+    assert.throws(
+      () => getPlatformFilename(),
+      /no shfmt build for this platform, set shellformat.path/
+    );
+  });
+
   test('too many redirects reject instead of looping forever', async () => {
     let n = 0;
     fakeFetch(() => {

@@ -53,7 +53,11 @@ export function getPlatformFilename() {
   if (arch === Arch.unknown || platform === Platform.unknown) {
     throw new Error('do not find release shfmt for your platform');
   }
-  return `shfmt_${config.shfmtVersion}_${platform}_${arch}${getExecutableFileExt()}`;
+  const filename = `shfmt_${config.shfmtVersion}_${platform}_${arch}${getExecutableFileExt()}`;
+  if (!(filename in config.shfmtChecksums)) {
+    throw new Error('no shfmt build for this platform, set shellformat.path');
+  }
+  return filename;
 }
 
 export function getReleaseDownloadUrl() {
