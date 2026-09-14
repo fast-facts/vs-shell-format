@@ -1,9 +1,13 @@
 import * as fs from 'fs';
 import * as crypto from 'crypto';
 import { config } from './config';
+import { getPlatformFilename, getReleaseDownloadUrl } from './platform';
 import * as vscode from 'vscode';
 import * as path from 'path';
 import * as child_process from 'child_process';
+
+export * from './platform';
+
 const MaxRedirects = 10;
 const allowedDownloadHosts = [
   'github.com',
@@ -78,73 +82,6 @@ async function runDownload(srcUrl: string, destPath: string): Promise<void> {
   await fs.promises.writeFile(destPath, body, { mode: 0o644 });
   await verifyShfmtChecksum(destPath);
   await fs.promises.chmod(destPath, 0o755);
-}
-
-enum Arch {
-  arm = 'arm',
-  arm64 = 'arm64',
-  i386 = '386',
-  mips = 'mips',
-  x64 = 'amd64',
-  unknown = 'unknown',
-}
-
-enum Platform {
-  darwin = 'darwin',
-  freebsd = 'freebsd',
-  linux = 'linux',
-  netbsd = 'netbsd',
-  openbsd = 'openbsd',
-  windows = 'windows',
-  unknown = 'unknown',
-}
-
-const archByNode: Partial<Record<NodeJS.Architecture, Arch>> = {
-  arm: Arch.arm,
-  arm64: Arch.arm64,
-  ia32: Arch.i386,
-  x64: Arch.x64,
-  mips: Arch.mips,
-};
-
-export function getArchExtension(): Arch {
-  return archByNode[process.arch] ?? Arch.unknown;
-}
-
-function getExecutableFileExt() {
-  if (process.platform === 'win32') {
-    return '.exe';
-  } else {
-    return '';
-  }
-}
-
-const platformByNode: Partial<Record<NodeJS.Platform, Platform>> = {
-  win32: Platform.windows,
-  freebsd: Platform.freebsd,
-  openbsd: Platform.openbsd,
-  darwin: Platform.darwin,
-  linux: Platform.linux,
-};
-
-export function getPlatform(): Platform {
-  return platformByNode[process.platform] ?? Platform.unknown;
-}
-
-export function getPlatformFilename() {
-  const arch = getArchExtension();
-  const platform = getPlatform();
-  if (arch === Arch.unknown || platform === Platform.unknown) {
-    throw new Error('do not find release shfmt for your platform');
-  }
-  return `shfmt_${config.shfmtVersion}_${platform}_${arch}${getExecutableFileExt()}`;
-}
-
-export function getReleaseDownloadUrl() {
-  // https://github.com/mvdan/sh/releases/download/v2.6.4/shfmt_v2.6.4_darwin_amd64
-  return `https://github.com/mvdan/sh/releases/download/${
-    config.shfmtVersion
-  }/${getPlatformFilename()}`;
 }
 
 export function getDestPath(context: vscode.ExtensionContext): string {
