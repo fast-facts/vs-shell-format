@@ -96,5 +96,5 @@ export function getEdits(fileName: string, oldStr: string, newStr: string, eol =
     ''
   );
   const filePatches: FilePatch[] = parseUniDiffs([unifiedDiffs], eol);
-  return filePatches[0];
+  return filePatches[0] ?? { fileName, edits: [] };
 }

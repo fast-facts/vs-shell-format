@@ -193,9 +193,11 @@ export class Formatter {
     } catch (e) {
       const errMsg = e instanceof Error ? e.message : String(e);
       const errLoc = /^<standard input>:(\d+):(\d+):/.exec(errMsg);
-      if (errLoc !== null && errLoc.length > 2) {
-        const line = Math.max(0, parseInt(errLoc[1], 10) - 1);
-        const column = Math.max(0, parseInt(errLoc[2], 10) - 1);
+      const lineText = errLoc?.[1];
+      const columnText = errLoc?.[2];
+      if (lineText !== undefined && columnText !== undefined) {
+        const line = Math.max(0, parseInt(lineText, 10) - 1);
+        const column = Math.max(0, parseInt(columnText, 10) - 1);
         const diag: vscode.Diagnostic = {
           range: new vscode.Range(
             new vscode.Position(line, column),

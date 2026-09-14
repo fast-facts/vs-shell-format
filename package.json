@@ -24,7 +24,7 @@
     "onLanguage:mksh",
     "onLanguage:dash"
   ],
-  "main": "./dist/extension",
+  "main": "./dist/extension.js",
   "capabilities": {
     "documentFormattingProvider": "true",
     "untrustedWorkspaces": {

@@ -11,7 +11,7 @@ export function fileExists(filePath: string): boolean {
 
 export function substitutePath(filePath: string): string {
   const workspaceFolder =
-    vscode.workspace.workspaceFolders?.[0].uri.fsPath;
+    vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
   return filePath
     .replace(/\${workspaceRoot}/g, workspaceFolder || '')
     .replace(/\${workspaceFolder}/g, workspaceFolder || '')
