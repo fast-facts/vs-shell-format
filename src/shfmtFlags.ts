@@ -34,6 +34,10 @@ const dialectByLanguageId: Record<string, string> = {
   dash: 'posix',
 };
 
+function isOn(value: unknown): boolean {
+  return value === true || value === 'true';
+}
+
 function splitFlags(raw: string): string[] {
   const tokens: string[] = [];
   let current = '';
@@ -103,26 +107,29 @@ export function prepareShfmt(input: PrepareShfmtInput): PrepareShfmtResult {
     if (edcfg.indent_style === 'tab') {
       flags.push('-i=0');
       hasIndent = true;
-    } else if (edcfg.indent_style === 'space' && typeof edcfg.indent_size === 'number') {
-      flags.push(`-i=${edcfg.indent_size}`);
-      hasIndent = true;
+    } else if (edcfg.indent_style === 'space') {
+      const size = edcfg.indent_size;
+      if (typeof size === 'number' || (typeof size === 'string' && /^-?\d+$/.test(size))) {
+        flags.push(`-i=${size}`);
+        hasIndent = true;
+      }
     }
     if (typeof edcfg.shell_variant === 'string' && edcfg.shell_variant) {
       flags.push(`-ln=${edcfg.shell_variant}`);
     }
-    if (edcfg.binary_next_line) {
+    if (isOn(edcfg.binary_next_line)) {
       flags.push('-bn');
     }
-    if (edcfg.switch_case_indent) {
+    if (isOn(edcfg.switch_case_indent)) {
       flags.push('-ci');
     }
-    if (edcfg.space_redirects) {
+    if (isOn(edcfg.space_redirects)) {
       flags.push('-sr');
     }
-    if (edcfg.keep_padding) {
+    if (isOn(edcfg.keep_padding)) {
       flags.push('-kp');
     }
-    if (edcfg.function_next_line) {
+    if (isOn(edcfg.function_next_line)) {
       flags.push('-fn');
     }
   }

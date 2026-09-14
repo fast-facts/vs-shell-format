@@ -121,6 +121,54 @@ suite('prepareShfmt', () => {
     );
   });
 
+  test('EditorConfig off values do not add boolean flags', () => {
+    for (const off of ['false', false, 0, '', undefined] as const) {
+      assert.deepStrictEqual(
+        runFlags('script.sh', {
+          useEditorConfig: true,
+          editorConfig: {
+            binary_next_line: off,
+            switch_case_indent: off,
+            space_redirects: off,
+            keep_padding: off,
+            function_next_line: off,
+          },
+        }),
+        ['-i=4']
+      );
+    }
+  });
+
+  test('EditorConfig string true adds -bn', () => {
+    assert.deepStrictEqual(
+      runFlags('script.sh', {
+        useEditorConfig: true,
+        editorConfig: { binary_next_line: 'true' },
+      }),
+      ['-bn', '-i=4']
+    );
+  });
+
+  test('EditorConfig indent_size numeric string maps to -i', () => {
+    assert.deepStrictEqual(
+      runFlags('script.sh', {
+        useEditorConfig: true,
+        editorConfig: { indent_style: 'space', indent_size: '2' },
+      }),
+      ['-i=2']
+    );
+  });
+
+  test('EditorConfig indent_size tab is not a number', () => {
+    assert.deepStrictEqual(
+      runFlags('script.sh', {
+        useEditorConfig: true,
+        editorConfig: { indent_style: 'space', indent_size: 'tab' },
+      }),
+      ['-i=4']
+    );
+  });
+
   test('EditorConfig off keeps user flags', () => {
     assert.deepStrictEqual(runFlags('script.sh', { flag: '-p -bn' }), ['-p', '-bn', '-i=4']);
   });
