@@ -151,6 +151,7 @@ export class Formatter {
 
   constructor(public context: vscode.ExtensionContext) {
     this.diagnosticCollection = vscode.languages.createDiagnosticCollection('shell-format');
+    context.subscriptions.push(this.diagnosticCollection);
   }
 
   public formatDocument(

@@ -6,13 +6,7 @@
 <a href="https://marketplace.visualstudio.com/items?itemName=vs-shell-format.shell-format-secure" target="__blank"><img src="https://vsmarketplacebadges.dev/rating/vs-shell-format.shell-format-secure.svg" alt="Rating" /></a>
 <a href="https://github.com/fast-facts/vs-shell-format" target="__blank"><img src="https://github.com/fast-facts/vs-shell-format/actions/workflows/CI.yml/badge.svg" /></a>
 
-> [!Note]
->
-> This is a fork of [foxundermoon/vs-shell-format](https://github.com/foxundermoon/vs-shell-format).
->
-> Since the original package is no longer maintained, I just try to fork this package, fix this issue and re-publish new package to marketplace.
->
-> See <https://github.com/foxundermoon/vs-shell-format/issues/396>.
+This is a maintained fork of [foxundermoon/vs-shell-format](https://github.com/foxundermoon/vs-shell-format). It downloads shfmt from GitHub and checks a checksum. In an untrusted workspace, the workspace cannot set `shellformat.path` or `shellformat.flag`. See https://github.com/foxundermoon/vs-shell-format/issues/396.
 
 ## Supported file types or languages
 
@@ -67,11 +61,13 @@ You can skip the download:
 
 Or set `shellformat.path` to a shfmt binary you already have. That setting is user only. A workspace cannot set it.
 
-Checksums are checked for the automatic GitHub download.
+Only the GitHub auto-download is checksummed. A custom `shellformat.path` is not.
 
 ## EditorConfig
 
-Set `shellformat.useEditorConfig` to `true` if you want shfmt to read `.editorconfig`. When that setting is on, `shellformat.flag` is ignored. shfmt gets the file path with `--filename` and reads `.editorconfig` itself.
+Set `shellformat.useEditorConfig` to `true` to apply `.editorconfig`. The extension reads that file and turns keys into shfmt flags: `-i`, `-ln`, `-bn`, `-ci`, `-sr`, `-kp`, `-fn`. When that setting is on, `shellformat.flag` is ignored.
+
+Untitled files have no path, so EditorConfig may be empty. The editor tab size still applies in that case.
 
 When the setting is off, `shellformat.flag` and the editor tab size apply.
 
@@ -88,10 +84,10 @@ switch_case_indent = true
 
 ## Settings
 
-- `shellformat.path`: full path to shfmt. User setting only. Example on macOS or Linux: `/usr/local/bin/shfmt`. Example on Windows: `C:\bin\shfmt.exe`.
+- `shellformat.path`: full path to shfmt. User setting only. Example on macOS or Linux: `/usr/local/bin/shfmt`. Example on Windows: `C:\bin\shfmt.exe`. This path is not checksummed.
 - `shellformat.flag`: extra shfmt flags, for example `-p -bn -ci`. User setting only. Ignored when `shellformat.useEditorConfig` is on. Do not use `-w`.
 - `shellformat.effectLanguages`: languages this formatter runs on. Default is all supported languages.
-- `shellformat.useEditorConfig`: when on, shfmt reads `.editorconfig` from the file path.
+- `shellformat.useEditorConfig`: when on, apply `.editorconfig`. `shellformat.flag` is ignored.
 
 ## Troubleshooting
 

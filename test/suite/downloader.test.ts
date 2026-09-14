@@ -1,6 +1,7 @@
 import * as assert from 'assert';
 import * as vscode from 'vscode';
 import {
+  checkInstall,
   checkNeedInstall,
   download2,
   getArchExtension,
@@ -239,8 +240,33 @@ suite('Downloader Tests', () => {
   });
 
   test('an executable custom path skips the download', async () => {
-    const output = { appendLine: () => undefined, show: () => undefined } as unknown as vscode.OutputChannel;
+    let showCalls = 0;
+    const output = {
+      appendLine: () => undefined,
+      show: () => {
+        showCalls += 1;
+      },
+    } as unknown as vscode.OutputChannel;
     assert.strictEqual(await checkNeedInstall('/nonexistent-dest', output, process.execPath), false);
+    assert.strictEqual(showCalls, 0);
+  });
+
+  test('show is called when download fails', async () => {
+    fakeFetch(() => ({ statusCode: 404 }));
+    let showCalls = 0;
+    const output = {
+      appendLine: () => undefined,
+      show: () => {
+        showCalls += 1;
+      },
+    } as unknown as vscode.OutputChannel;
+    await checkInstall(
+      { extensionPath: `${__dirname}/../check-install-fail` } as vscode.ExtensionContext,
+      output,
+      null,
+      { checked: false }
+    );
+    assert.strictEqual(showCalls, 1);
   });
 
   test('install check state is not shared', async () => {

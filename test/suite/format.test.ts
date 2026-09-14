@@ -97,7 +97,10 @@ suite('Format golden files', function () {
   });
 
   test('dockerfile parse failure rejects with an Error', async () => {
-    const formatter = new Formatter({ extensionPath: root } as vscode.ExtensionContext);
+    const formatter = new Formatter({
+      extensionPath: root,
+      subscriptions: [] as vscode.Disposable[],
+    } as vscode.ExtensionContext);
     const document = await vscode.workspace.openTextDocument({
       language: 'dockerfile',
       content: 'RUN echo "unclosed\n',
