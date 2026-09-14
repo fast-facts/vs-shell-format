@@ -5,14 +5,14 @@ import {
   Formatter,
   getSettings,
   output,
-  ShellDocumentFormattingEditProvider,
+  ShellDocumentFormattingEditProvider
 } from './shFormat';
 
 import { checkInstall } from './downloader';
 
 export enum DocumentFilterScheme {
   File = 'file',
-  Untitled = 'untitled',
+  Untitled = 'untitled'
 }
 
 export async function activate(
@@ -23,7 +23,7 @@ export async function activate(
   const shFmtProvider = new ShellDocumentFormattingEditProvider(shfmter);
   registerFormattingProviders(context, shFmtProvider);
   context.subscriptions.push(
-    vscode.workspace.onDidChangeConfiguration((e) => {
+    vscode.workspace.onDidChangeConfiguration(e => {
       if (e.affectsConfiguration(`${configurationPrefix}.${ConfigItemName.EffectLanguages}`)) {
         registerFormattingProviders(context, shFmtProvider);
       }

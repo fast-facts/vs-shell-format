@@ -24,12 +24,9 @@ function withWorkspaceFolders(
 }
 
 suite('pathUtil', () => {
-  test('fileExists is true for a file and false for a missing path', () => {
+  test('fileExists is true for a file and false for a missing path or directory', () => {
     assert.strictEqual(fileExists(__filename), true);
     assert.strictEqual(fileExists(path.join(__dirname, 'no-such-file')), false);
-  });
-
-  test('fileExists is false for a directory', () => {
     assert.strictEqual(fileExists(__dirname), false);
   });
 

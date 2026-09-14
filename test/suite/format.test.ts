@@ -28,7 +28,7 @@ const CASES = [
   { name: 'sample.eclass', language: 'shellscript' },
 ] as const;
 
-async function formatDocument(document: vscode.TextDocument): Promise<string> {
+async function applyFormat(document: vscode.TextDocument): Promise<string> {
   const edits = await vscode.commands.executeCommand<vscode.TextEdit[] | undefined>(
     'vscode.executeFormatDocumentProvider',
     document.uri,
@@ -43,7 +43,11 @@ async function formatDocument(document: vscode.TextDocument): Promise<string> {
     const end = document.offsetAt(edit.range.end);
     result = result.slice(0, start) + edit.newText + result.slice(end);
   }
-  return result.replace(/\r\n/g, '\n');
+  return result;
+}
+
+async function formatDocument(document: vscode.TextDocument): Promise<string> {
+  return (await applyFormat(document)).replace(/\r\n/g, '\n');
 }
 
 async function formatFile(filePath: string, language: string): Promise<string> {
@@ -135,20 +139,6 @@ suite('Format golden files', function () {
       content: 'echo  hi\r\n',
     });
     assert.strictEqual(document.eol, vscode.EndOfLine.CRLF);
-    const edits = await vscode.commands.executeCommand<vscode.TextEdit[] | undefined>(
-      'vscode.executeFormatDocumentProvider',
-      document.uri,
-      { tabSize: 4, insertSpaces: true }
-    );
-    const sorted = [...(edits ?? [])].sort(
-      (a, b) => b.range.start.compareTo(a.range.start) || b.range.end.compareTo(a.range.end)
-    );
-    let result = document.getText();
-    for (const edit of sorted) {
-      const start = document.offsetAt(edit.range.start);
-      const end = document.offsetAt(edit.range.end);
-      result = result.slice(0, start) + edit.newText + result.slice(end);
-    }
-    assert.strictEqual(result, 'echo hi\r\n');
+    assert.strictEqual(await applyFormat(document), 'echo hi\r\n');
   });
 });

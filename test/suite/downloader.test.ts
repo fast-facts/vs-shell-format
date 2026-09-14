@@ -8,7 +8,7 @@ import {
   getPlatform,
   getPlatformFilename,
   getReleaseDownloadUrl,
-  verifyShfmtChecksum,
+  verifyShfmtChecksum
 } from '../../src/downloader';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -184,14 +184,14 @@ suite('Downloader Tests', () => {
     const dest = `${__dirname}/../shfmt-trap`;
     const marker = `${dest}.marker`;
     await fs.promises.writeFile(dest, `#!/bin/sh\ntouch "${marker}"\n`, { mode: 0o755 });
-    const output = { appendLine() {}, show() {} } as unknown as vscode.OutputChannel;
+    const output = { appendLine: () => undefined, show: () => undefined } as unknown as vscode.OutputChannel;
     assert.strictEqual(await checkNeedInstall(dest, output, null), true);
     await assert.rejects(fs.promises.access(marker));
     await assert.rejects(fs.promises.access(dest));
   });
 
   test('an executable custom path skips the download', async () => {
-    const output = { appendLine() {}, show() {} } as unknown as vscode.OutputChannel;
+    const output = { appendLine: () => undefined, show: () => undefined } as unknown as vscode.OutputChannel;
     assert.strictEqual(await checkNeedInstall('/nonexistent-dest', output, process.execPath), false);
   });
 });

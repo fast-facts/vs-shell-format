@@ -58,19 +58,19 @@ export function runShfmt(
     }
     const stdoutChunks: Buffer[] = [];
     const stderrChunks: Buffer[] = [];
-    childStdout.on('data', (chunk) => {
+    childStdout.on('data', (chunk: Buffer | string) => {
       stdoutChunks.push(chunk instanceof Buffer ? chunk : Buffer.from(chunk));
     });
-    childStderr.on('data', (chunk) => {
+    childStderr.on('data', (chunk: Buffer | string) => {
       stderrChunks.push(chunk instanceof Buffer ? chunk : Buffer.from(chunk));
     });
-    child.on('error', (err) => {
+    child.on('error', err => {
       child.kill();
       done(() => reject(err instanceof Error ? err : new Error(String(err))));
     });
     // shfmt can exit before reading stdin; the close handler reports the real error.
     childStdin.on('error', () => undefined);
-    child.on('close', (code) => {
+    child.on('close', code => {
       if (code === 0) {
         done(() => resolve(Buffer.concat(stdoutChunks).toString()));
       } else {
@@ -101,7 +101,7 @@ export function runShfmt(
 
 export enum ConfigItemName {
   Path = 'path',
-  EffectLanguages = 'effectLanguages',
+  EffectLanguages = 'effectLanguages'
 }
 
 export class Formatter {
@@ -142,13 +142,13 @@ export class Formatter {
           spaceRedirects: false,
         });
         this.diagnosticCollection.delete(document.uri);
-        return getEdits(document.fileName, content, result, eol).edits.map((edit) =>
+        return getEdits(document.fileName, content, result, eol).edits.map(edit =>
           edit.apply()
         );
       } catch (error) {
-        const message = error instanceof Error ? error.message : String(error);
-        output.appendLine(message);
-        throw error instanceof Error ? error : new Error(message);
+        const err = error instanceof Error ? error : new Error(String(error));
+        output.appendLine(err.message);
+        throw err;
       }
     }
     const settings = vscode.workspace.getConfiguration(configurationPrefix);
@@ -192,7 +192,6 @@ export class Formatter {
       result = await runShfmt(prep.command, prep.flags, content, token);
     } catch (e) {
       const errMsg = e instanceof Error ? e.message : String(e);
-      // https://regex101.com/r/uPoLKg/2/
       const errLoc = /^<standard input>:(\d+):(\d+):/.exec(errMsg);
       if (errLoc !== null && errLoc.length > 2) {
         const line = Math.max(0, parseInt(errLoc[1], 10) - 1);
@@ -208,14 +207,14 @@ export class Formatter {
         this.diagnosticCollection.delete(document.uri);
         this.diagnosticCollection.set(document.uri, [diag]);
       }
-      throw new Error(errMsg);
+      throw new Error(errMsg, { cause: e });
     }
 
     if (!result) {
       return [];
     }
     this.diagnosticCollection.delete(document.uri);
-    return getEdits(document.fileName, content, result, eol).edits.map((edit) => edit.apply());
+    return getEdits(document.fileName, content, result, eol).edits.map(edit => edit.apply());
   }
 }
 

@@ -34,14 +34,6 @@ const dialectByLanguageId: Record<string, string> = {
   dash: 'posix',
 };
 
-function splitFlags(flag: string): string[] {
-  return flag.split(/\s+/).filter(Boolean);
-}
-
-function isIndentFlag(token: string): boolean {
-  return token === '-i' || token.startsWith('-i=');
-}
-
 export function prepareShfmt(input: PrepareShfmtInput): PrepareShfmtResult {
   const flags: string[] = [];
   let hasIndent = false;
@@ -104,14 +96,14 @@ export function prepareShfmt(input: PrepareShfmtInput): PrepareShfmtResult {
   }
 
   if (userFlag) {
-    const tokens = splitFlags(userFlag);
+    const tokens = userFlag.split(/\s+/).filter(Boolean);
     if (tokens.includes('-w')) {
       return {
         kind: 'write-flag',
         message: 'Incompatible flag specified in shellformat.flag: -w',
       };
     }
-    if (tokens.some(isIndentFlag)) {
+    if (tokens.some(t => t === '-i' || t.startsWith('-i='))) {
       hasIndent = true;
     }
     flags.push(...tokens);

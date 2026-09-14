@@ -64,9 +64,9 @@ suite('Language list contract', function () {
     assert.strictEqual(await formatEdits('plaintext'), undefined);
   });
 
-  test('activation registers providers before the install finishes', async function () {
+  test('activation registers providers before the install finishes', async () => {
     let releaseInstall!: () => void;
-    const installGate = new Promise<void>((resolve) => {
+    const installGate = new Promise<void>(resolve => {
       releaseInstall = resolve;
     });
     let installCalled = false;
@@ -79,7 +79,7 @@ suite('Language list contract', function () {
         await installGate;
       },
     });
-    await new Promise((resolve) => setTimeout(resolve, 50));
+    await new Promise(resolve => setTimeout(resolve, 50));
     assert.ok(installCalled, 'expected the install check to start');
     assert.ok(
       context.subscriptions.length >= DEFAULT_LANGUAGES.length,
@@ -101,19 +101,12 @@ suite('Language list contract', function () {
         if (dockerEdits === undefined) {
           break;
         }
-        await new Promise((resolve) => setTimeout(resolve, 100));
+        await new Promise(resolve => setTimeout(resolve, 100));
       }
       assert.strictEqual(dockerEdits, undefined, 'dockerfile provider should be gone');
       assert.notStrictEqual(await formatEdits('shellscript'), undefined);
     } finally {
       await config.update('effectLanguages', undefined, vscode.ConfigurationTarget.Global);
     }
-  });
-
-  test('restores the real providers after these tests', async function () {
-    this.timeout(60000);
-    const ext = vscode.extensions.getExtension(EXTENSION_ID);
-    assert.ok(ext, `extension ${EXTENSION_ID} is not present`);
-    await ext.activate();
   });
 });

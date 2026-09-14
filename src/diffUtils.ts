@@ -5,7 +5,7 @@ import { structuredPatch, type StructuredPatch, type StructuredPatchHunk } from 
 export enum EditTypes {
   EDIT_DELETE,
   EDIT_INSERT,
-  EDIT_REPLACE,
+  EDIT_REPLACE
 }
 
 export class Edit {

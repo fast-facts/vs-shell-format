@@ -26,7 +26,7 @@ suite('shfmt parse errors become diagnostics', function () {
     });
     const errMsg = await formatter.formatDocument(document).then(
       () => assert.fail('format should fail on broken shell'),
-      (e) => (e instanceof Error ? e.message : String(e))
+      (e: unknown) => (e instanceof Error ? e.message : String(e))
     );
     const errLoc = /^<standard input>:(\d+):(\d+):/.exec(errMsg);
     assert.ok(errLoc, `expected <standard input>:line:col: in: ${errMsg}`);
@@ -44,11 +44,12 @@ suite('shfmt parse errors become diagnostics', function () {
     });
     const errMsg = await formatter.formatDocument(document).then(
       () => assert.fail('format should fail on broken shell'),
-      (e) => (e instanceof Error ? e.message : String(e))
+      (e: unknown) => (e instanceof Error ? e.message : String(e))
     );
     assert.ok(/^<standard input>:2:1:/.test(errMsg), `unexpected message: ${errMsg}`);
     const diags = formatter.diagnosticCollection.get(document.uri);
-    assert.ok(diags && diags.length === 1, 'expected one diagnostic on the broken file');
+    assert.ok(diags);
+    assert.strictEqual(diags.length, 1, 'expected one diagnostic on the broken file');
     assert.strictEqual(diags[0].range.start.line, 1);
     assert.strictEqual(diags[0].range.start.character, 0);
   });
@@ -62,7 +63,6 @@ suite('shfmt parse errors become diagnostics', function () {
     assert.strictEqual(edits.length, 1);
     assert.strictEqual(edits[0].newText, '\n');
     assert.strictEqual(formatter.diagnosticCollection.get(document.uri)?.length ?? 0, 0);
-
   });
 
   test('diagnostic clears after the file is fixed', async () => {
