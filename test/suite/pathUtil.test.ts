@@ -29,6 +29,10 @@ suite('pathUtil', () => {
     assert.strictEqual(fileExists(path.join(__dirname, 'no-such-file')), false);
   });
 
+  test('fileExists is false for a directory', () => {
+    assert.strictEqual(fileExists(__dirname), false);
+  });
+
   test('substitutePath replaces workspaceFolder, workspaceRoot, and env', () => {
     const wsUri = vscode.Uri.file('/ws');
     const ws = wsUri.fsPath;
@@ -38,6 +42,24 @@ suite('pathUtil', () => {
         assert.strictEqual(substitutePath('${workspaceFolder}/bin'), `${ws}/bin`);
         assert.strictEqual(substitutePath('${workspaceRoot}/bin'), `${ws}/bin`);
         assert.strictEqual(substitutePath('${env:PATHUTIL_TEST_VAR}'), 'from-env');
+      });
+    } finally {
+      delete process.env.PATHUTIL_TEST_VAR;
+    }
+  });
+
+  test('substitutePath handles several vars in one string', () => {
+    const wsUri = vscode.Uri.file('/ws');
+    const ws = wsUri.fsPath;
+    process.env.PATHUTIL_TEST_VAR = 'from-env';
+    delete process.env.PATHUTIL_TEST_GONE;
+    try {
+      withWorkspaceFolders([{ uri: wsUri, name: 'ws', index: 0 }], () => {
+        assert.strictEqual(
+          substitutePath('${workspaceFolder}/a/${env:PATHUTIL_TEST_VAR}/c'),
+          `${ws}/a/from-env/c`
+        );
+        assert.strictEqual(substitutePath('${env:PATHUTIL_TEST_GONE}/x'), '/x');
       });
     } finally {
       delete process.env.PATHUTIL_TEST_VAR;

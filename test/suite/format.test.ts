@@ -7,14 +7,17 @@ const EXTENSION_ID = 'vs-shell-format.shell-format-secure';
 
 const CASES = [
   { name: 'getacme.sh', language: 'shellscript' },
+  { name: 'sample.bash', language: 'shellscript' },
   { name: 'test.zsh', language: 'zsh' },
   { name: '.zshrc', language: 'zsh' },
   { name: 'sample.bats', language: 'bats' },
+  { name: 'bats.bats', language: 'bats' },
   { name: '.env', language: 'dotenv' },
   { name: 'Dockerfile', language: 'dockerfile' },
   { name: 'hosts', language: 'hosts' },
   { name: '.gitignore', language: 'ignore' },
   { name: 'application.properties', language: 'properties' },
+  { name: 'application.properties', language: 'spring-boot-properties' },
   { name: 'idea.vmoptions', language: 'jvmoptions' },
   { name: 'azure.azcli', language: 'azcli' },
   { name: 'sample.mksh', language: 'mksh' },
@@ -78,6 +81,24 @@ suite('Format golden files', function () {
       assert.strictEqual(await formatFile(golden, c.language), expected);
     });
   }
+
+  test('missing trailing newline is added once and stays stable', async () => {
+    const formatShell = async (content: string): Promise<string> =>
+      formatDocument(
+        await vscode.workspace.openTextDocument({ language: 'shellscript', content })
+      );
+
+    const once = await formatShell('echo  hi');
+    assert.strictEqual(once, 'echo hi\n');
+    assert.strictEqual(await formatShell(once), once);
+  });
+
+  test('empty shell file formats to itself', async () => {
+    assert.strictEqual(
+      await formatFile(path.join(root, 'test', 'supported', 'error.sh'), 'shellscript'),
+      ''
+    );
+  });
 
   test('dockerfile keeps backslash continuations and is idempotent', async () => {
     const formatUntitled = async (content: string): Promise<string> =>

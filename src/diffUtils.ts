@@ -40,7 +40,7 @@ export interface FilePatch {
   edits: Edit[];
 }
 
-function parseUniDiffs(diffOutput: StructuredPatch[]): FilePatch[] {
+function parseUniDiffs(diffOutput: StructuredPatch[], eol: string): FilePatch[] {
   const filePatches: FilePatch[] = [];
   diffOutput.forEach((uniDiff: StructuredPatch) => {
     let edit: Edit | null = null;
@@ -62,7 +62,7 @@ function parseUniDiffs(diffOutput: StructuredPatch[]): FilePatch[] {
             } else if (edit.action === EditTypes.EDIT_DELETE) {
               edit.action = EditTypes.EDIT_REPLACE;
             }
-            edit.text += line.slice(1) + '\n';
+            edit.text += line.slice(1) + eol;
             break;
           case ' ':
             startLine++;
@@ -75,6 +75,7 @@ function parseUniDiffs(diffOutput: StructuredPatch[]): FilePatch[] {
       });
       if (edit != null) {
         edits.push(edit);
+        edit = null;
       }
     });
     filePatches.push({ fileName: uniDiff.oldFileName ?? '', edits: edits });
@@ -83,11 +84,9 @@ function parseUniDiffs(diffOutput: StructuredPatch[]): FilePatch[] {
   return filePatches;
 }
 
-export function getEdits(fileName: string, oldStr: string, newStr: string): FilePatch {
-  if (process.platform === 'win32') {
-    oldStr = oldStr.split('\r\n').join('\n');
-    newStr = newStr.split('\r\n').join('\n');
-  }
+export function getEdits(fileName: string, oldStr: string, newStr: string, eol = '\n'): FilePatch {
+  oldStr = oldStr.split('\r\n').join('\n');
+  newStr = newStr.split('\r\n').join('\n');
   const unifiedDiffs: StructuredPatch = structuredPatch(
     fileName,
     fileName,
@@ -96,6 +95,6 @@ export function getEdits(fileName: string, oldStr: string, newStr: string): File
     '',
     ''
   );
-  const filePatches: FilePatch[] = parseUniDiffs([unifiedDiffs]);
+  const filePatches: FilePatch[] = parseUniDiffs([unifiedDiffs], eol);
   return filePatches[0];
 }

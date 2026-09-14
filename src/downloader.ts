@@ -201,7 +201,7 @@ async function cleanFile(file: string) {
   await fs.promises.unlink(file);
 }
 
-async function checkNeedInstall(
+export async function checkNeedInstall(
   dest: string,
   output: vscode.OutputChannel,
   configPath: string | null
@@ -217,6 +217,15 @@ async function checkNeedInstall(
           `"shellformat.path": "${configPath}"   find config shellformat path ,but the file cannot execute or not exists, so will auto download shfmt`
         );
       }
+    }
+
+    // Verify before executing: getInstalledVersion runs the binary, so a
+    // tampered file must never reach it without a checksum check first.
+    try {
+      await verifyShfmtChecksum(dest);
+    } catch (err) {
+      output.appendLine(`installed shfmt failed checksum, will re-download: ${err}`);
+      return true;
     }
 
     const version = await getInstalledVersion(dest);

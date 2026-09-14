@@ -15,22 +15,48 @@ export enum DocumentFilterScheme {
   Untitled = 'untitled',
 }
 
-export async function activate(context: vscode.ExtensionContext) {
-  const settings = vscode.workspace.getConfiguration(configurationPrefix);
+export async function activate(
+  context: vscode.ExtensionContext,
+  deps: { checkInstall: typeof checkInstall } = { checkInstall }
+) {
   const shfmter = new Formatter(context);
   const shFmtProvider = new ShellDocumentFormattingEditProvider(shfmter);
-  await checkInstall(context, output, getSettings('path'));
-  const effectLanguages = settings.get<string[]>(ConfigItemName.EffectLanguages);
-  if (effectLanguages) {
-    for (const lang of effectLanguages) {
-      for (const schemae of Object.values(DocumentFilterScheme)) {
-        context.subscriptions.push(
-          vscode.languages.registerDocumentFormattingEditProvider(
-            { language: lang, scheme: schemae },
-            shFmtProvider
-          )
-        );
+  registerFormattingProviders(context, shFmtProvider);
+  context.subscriptions.push(
+    vscode.workspace.onDidChangeConfiguration((e) => {
+      if (e.affectsConfiguration(`${configurationPrefix}.${ConfigItemName.EffectLanguages}`)) {
+        registerFormattingProviders(context, shFmtProvider);
       }
+    })
+  );
+  await deps.checkInstall(context, output, getSettings('path'));
+}
+
+let activeProviderDisposables: vscode.Disposable[] = [];
+
+export function registerFormattingProviders(
+  context: vscode.ExtensionContext,
+  provider: ShellDocumentFormattingEditProvider,
+  registrar: (
+    selector: vscode.DocumentSelector,
+    provider: vscode.DocumentFormattingEditProvider
+  ) => vscode.Disposable = (selector, editProvider) =>
+    vscode.languages.registerDocumentFormattingEditProvider(selector, editProvider)
+) {
+  for (const disposable of activeProviderDisposables) {
+    disposable.dispose();
+  }
+  activeProviderDisposables = [];
+  const settings = vscode.workspace.getConfiguration(configurationPrefix);
+  const effectLanguages = settings.get<string[]>(ConfigItemName.EffectLanguages);
+  if (!effectLanguages) {
+    return;
+  }
+  for (const lang of effectLanguages) {
+    for (const schemae of Object.values(DocumentFilterScheme)) {
+      const disposable = registrar({ language: lang, scheme: schemae }, provider);
+      activeProviderDisposables.push(disposable);
+      context.subscriptions.push(disposable);
     }
   }
 }
