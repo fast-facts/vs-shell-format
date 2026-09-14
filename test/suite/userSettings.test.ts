@@ -1,4 +1,6 @@
 import * as assert from 'assert';
+import * as fs from 'fs';
+import * as path from 'path';
 import * as vscode from 'vscode';
 import { userOrDefaultSetting } from '../../src/userSettings';
 import { getSettings } from '../../src/shFormat';
@@ -17,6 +19,10 @@ suite('userOrDefaultSetting', () => {
       workspaceFolderLanguageValue: '/tmp/evil-folder-lang',
     });
     assert.strictEqual(result, null);
+    assert.strictEqual(
+      userOrDefaultSetting({ defaultValue: '/usr/bin/shfmt', workspaceValue: '/tmp/evil' }),
+      '/usr/bin/shfmt'
+    );
   });
 
   test('uses user setting and ignores all workspace values', () => {
@@ -38,6 +44,16 @@ suite('userOrDefaultSetting', () => {
       globalLanguageValue: '/opt/shfmt',
     });
     assert.strictEqual(result, '/opt/shfmt');
+  });
+});
+
+suite('untrusted workspace manifest', () => {
+  test('restricts path and flag only', () => {
+    const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '../../../package.json'), 'utf8'));
+    assert.deepStrictEqual(pkg.capabilities.untrustedWorkspaces.restrictedConfigurations, [
+      'shellformat.path',
+      'shellformat.flag',
+    ]);
   });
 });
 

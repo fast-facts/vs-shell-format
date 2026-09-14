@@ -261,9 +261,6 @@ export class Formatter {
       throw new Error(errMsg, { cause: e });
     }
 
-    if (!result) {
-      return [];
-    }
     this.diagnosticCollection.delete(document.uri);
     return getEdits(document.fileName, content, result, eol).edits.map(edit => edit.apply());
   }
