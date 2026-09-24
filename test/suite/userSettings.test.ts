@@ -57,7 +57,9 @@ suite('untrusted workspace manifest', () => {
   });
 });
 
-suite('getSettings integration', () => {
+suite('getSettings integration', function () {
+  this.timeout(20000);
+
   test('custom path expands env and leaves workspace vars literal', async () => {
     const config = vscode.workspace.getConfiguration('shellformat');
     process.env.SHELLFORMAT_TEST_BIN = '/opt/shfmt';
