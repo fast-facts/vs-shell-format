@@ -284,7 +284,7 @@
     "@vscode/vsce": "^3.9.2",
     "eslint-config-final": "^1.8.28",
     "glob": "^13.0.6",
-    "mocha": "^12.0.1",
+    "mocha": "^12.0.2",
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.70.0"
   },
