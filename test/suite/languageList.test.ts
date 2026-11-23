@@ -37,7 +37,10 @@ async function waitForShfmt(extensionPath: string): Promise<void> {
 }
 
 async function formatEdits(language: string): Promise<vscode.TextEdit[] | undefined> {
-  const document = await vscode.workspace.openTextDocument({ language, content: 'echo  hello\n' });
+  const document = await vscode.workspace.openTextDocument({
+    language,
+    content: 'RUN echo  hello\n',
+  });
   return vscode.commands.executeCommand<vscode.TextEdit[] | undefined>(
     'vscode.executeFormatDocumentProvider',
     document.uri,

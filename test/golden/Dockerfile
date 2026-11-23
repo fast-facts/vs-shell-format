@@ -16,6 +16,6 @@ RUN mkdir test \
     && echo "enjoy shellscript and docker by vs-shell-format" \
     && cd ..
 
-VOLUME [ "/data" ]
+VOLUME ["/data"]
 
 CMD ["sh", "-c", "hello world"]

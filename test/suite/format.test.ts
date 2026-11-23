@@ -103,7 +103,7 @@ suite('Format golden files', function () {
     } as vscode.ExtensionContext);
     const document = await vscode.workspace.openTextDocument({
       language: 'dockerfile',
-      content: 'RUN echo "unclosed\n',
+      content: 'FROM alpine\nRUN <<EOF\necho hi\n',
     });
     await assert.rejects(Promise.resolve(formatter.formatDocument(document)), (err: unknown) => {
       assert.ok(err instanceof Error, `expected an Error, got: ${String(err)}`);

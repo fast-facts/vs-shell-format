@@ -289,7 +289,7 @@
     "typescript-eslint": "^8.72.1"
   },
   "dependencies": {
-    "@reteps/dockerfmt": "0.5.4",
+    "@reteps/dockerfmt": "1.0.0",
     "diff": "^9.0.0",
     "editorconfig": "^3.0.2"
   },
