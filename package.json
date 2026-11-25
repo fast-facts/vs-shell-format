@@ -291,7 +291,7 @@
   "dependencies": {
     "@reteps/dockerfmt": "1.0.0",
     "diff": "^9.0.0",
-    "editorconfig": "^3.0.2"
+    "editorconfig": "^4.0.0"
   },
   "license": "MIT"
 }
